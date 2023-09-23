@@ -2,8 +2,8 @@ settings
 {
 	main
 	{
-		Description: "Fight against an endless horde of zombies while completing various objectives.\r\n		Use power ups found in supply drops while you fight off the horde. 	\r\n		Get to the extraction point and watch the map get nuked.\r\n		Don't leave anyone behind!\r\n		\r\n		(Original Creator: Mazattack#1183) [Game Code: MPJFR] \r\n		Discord: https://discord.gg/3BhYtNfwMj		\r\nhttps://workshop.codes/MPJFR\r\n		Github: github.com/Mazattack1999/zsm-ow"
-		Mode Name: "Zombie Survival Missions"
+		Description: "Fight against an endless horde of zombies while completing various objectives.\r\n		Use power ups found in supply drops while you fight off the horde. 	\r\n		Get to the extraction point and watch the map get nuked.\r\n		Don't leave anyone behind!\r\n		\r\n		(Original Creator: Mazattack#1183) [Game Code: MPJFR] \r\n		Discord: https://discord.gg/3BhYtNfwMj		\r\nhttps://workshop.codes/MEBGG\r\n		Github: github.com/Mazattack1999/zsw-ow"
+		Mode Name: "Zombie Survival Watch"
 	}
 
 	lobby
