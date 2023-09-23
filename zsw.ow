@@ -20,21 +20,16 @@ settings
 
 	modes
 	{
-		Assault
+		disabled Assault
 		{
 			Allow Hero Switching: Off
 			Capture Speed Modifier: 10%
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
-
-			disabled maps
-			{
-				Hanamura Winter
-			}
 		}
 
-		Capture the Flag
+		disabled Capture the Flag
 		{
 			Allow Hero Switching: Off
 			Damage Interrupts Flag Interaction: On
@@ -46,21 +41,9 @@ settings
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
-
-			disabled maps
-			{
-				Busan Downtown Lunar New Year
-				Busan Sanctuary Lunar New Year
-				Lijiang Control Center
-				Lijiang Garden
-				Lijiang Night Market
-				Oasis City Center
-				Oasis Gardens
-				Oasis University
-			}
 		}
 
-		Control
+		disabled Control
 		{
 			Allow Hero Switching: Off
 			Capture Speed Modifier: 10%
@@ -68,13 +51,6 @@ settings
 			Kill Cam: Off
 			Scoring Speed Modifier: 10%
 			Tank Role Passive Health Bonus: Always Enabled
-
-			enabled maps
-			{
-				Antarctic Peninsula 972777519512068153
-				Busan 972777519512068194 972777519512068153 972777519512068154
-				Oasis 972777519512068292 972777519512068153 972777519512068154
-			}
 		}
 
 		Escort
@@ -120,27 +96,12 @@ settings
 			TS-1 Walk Speed Modifier: 10%
 		}
 
-		Team Deathmatch
+		disabled Team Deathmatch
 		{
 			Allow Hero Switching: Off
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
-
-			enabled maps
-			{
-				Black Forest 972777519512063901
-				Black Forest Winter 972777519512063901
-				Castillo 972777519512063901
-				Château Guillard 972777519512063901
-				Château Guillard Halloween 972777519512063901
-				Ecopoint: Antarctica 972777519512063901
-				Ecopoint: Antarctica Winter 972777519512063901
-				Kanezaka 972777519512063901
-				Malevento 972777519512063901
-				Necropolis 972777519512068153
-				Petra 972777519512068154
-			}
 		}
 	}
 
@@ -668,10 +629,6 @@ rule("SKIP ASSEMBLING HEROES")
 			Global.specialGameModeSetup = True;
 			Wait(0.250, Ignore Condition);
 		End;
-		If(Is In Setup);
-			Set Match Time(0);
-			Wait(0.250, Ignore Condition);
-		End;
 		Set Match Time(3599);
 		Wait Until(Count Of(Filtered Array(All Players(Team 2), Has Spawned(Current Array Element))) > 0 && Count Of(Global.mapGrid) > 0,
 			9999);
@@ -681,56 +638,6 @@ rule("SKIP ASSEMBLING HEROES")
 		Chase Global Variable At Rate(chase1, 0, 1, None);
 		Disable Built-In Game Mode Announcer;
 		Disable Built-In Game Mode Completion;
-	}
-}
-
-rule("PREGAME SPAWN ROOM ROTATION")
-{
-	event
-	{
-		Ongoing - Global;
-	}
-
-	conditions
-	{
-		Global.specialGameModeSetup == True;
-		"Does not apply if game mode is special gamemode"
-		Global.specialGameMode != True;
-	}
-
-	actions
-	{
-		Wait(0.016, Abort When False);
-		Create Dummy Bot(Hero(Ana), Team 1, -1, Vector(0, 500, 0), Vector(0, 0, 0));
-		Global.attackSpawnRooms = Empty Array;
-		Global.spawnRoomIndex = 0;
-		"Records spawn room locations"
-		While(Count Of(Global.attackSpawnRooms) < (Current Game Mode == Game Mode(Assault) ? 2 : 3));
-			Start Forcing Spawn Room(Team 1, Global.spawnRoomIndex);
-			Wait(0.250, Ignore Condition);
-			Respawn(All Players(Team 1));
-			While(!Is In Spawn Room(First Of(All Players(Team 1))));
-				Wait(0.016, Ignore Condition);
-			End;
-			Modify Global Variable(attackSpawnRooms, Append To Array, Position Of(First Of(All Players(Team 1))));
-			Global.spawnRoomIndex += 1;
-		End;
-		"Accounts for first attack spawn rooms generally being bigger than other spawn rooms"
-		Global.attackSpawnRooms[0] += Direction Towards(First Of(Global.attackSpawnRooms), Objective Position(0)) * 10;
-		Wait(0.250, Ignore Condition);
-		Destroy All Dummy Bots;
-		"Rotates spawn rooms while waiting for game to start"
-		While(Global.specialGameModeSetup);
-			Global.spawnRoomIndex += 1;
-			If((Current Game Mode == Game Mode(Assault) && Global.spawnRoomIndex > 1) || (Global.spawnRoomIndex > 2));
-				Global.spawnRoomIndex = 0;
-			End;
-			"Open all spawn rooms"
-			Start Forcing Spawn Room(All Teams, Global.spawnRoomIndex);
-			Wait(1, Ignore Condition);
-		End;
-		"Change active spawn room to a location"
-		Global.activeAttackSpawnRoom = Global.attackSpawnRooms[Global.spawnRoomIndex];
 	}
 }
 
@@ -830,8 +737,6 @@ rule("START GAME")
 	{
 		Is Game In Progress == True;
 		Global.specialGameModeSetup != False;
-		Match Time <= 0.100;
-		Count Of(Filtered Array(All Players(Team 2), Has Spawned(Current Array Element))) > 0;
 	}
 
 	actions
@@ -1026,7 +931,6 @@ rule("determineDifficulty")
 				Global.difficultySetting = 1;
 			End;
 		End;
-		Start Rule(determineObjectiveType, Restart Rule);
 		Start Rule(setDifficulty, Restart Rule);
 	}
 }
@@ -1108,107 +1012,8 @@ rule("setDifficulty")
 			"Bot damage dealt"
 			Global.damageDealt = Array(300, 300, 250, 150, 230, 450, 150, 400, 300, 350, 200, 250, 150, 200, 200);
 		End;
-	}
-}
-
-rule("determineObjectiveType")
-{
-	event
-	{
-		Subroutine;
-		determineObjectiveType;
-	}
-
-	actions
-	{
-		Global.objectiveTypeSetting = 0;
-		For Global Variable(count1, 1, Count Of(Global.objectiveTypeVotes), 1);
-			If(Global.objectiveTypeVotes[Global.count1][1]);
-				Global.objectiveTypeVotes[Global.count1] = Count Of(Filtered Array(All Players(Team 2),
-					Current Array Element.playerActiveStatus && Current Array Element.playerMenuStatus[4] == Global.count1));
-			Else;
-				Global.objectiveTypeVotes[Global.count1] = -1;
-			End;
-		End;
-		For Global Variable(count1, 1, Count Of(Global.objectiveTypeVotes), 1);
-			If(Global.objectiveTypeVotes[Global.objectiveTypeSetting] < Global.objectiveTypeVotes[Global.count1]);
-				Global.objectiveTypeSetting = Global.count1;
-			Else If(Global.objectiveTypeVotes[Global.objectiveTypeSetting] == Global.objectiveTypeVotes[Global.count1]);
-				"Pick random objective type to break tie"
-				If(Global.objectiveTypeSetting != 0 && Random Integer(0, 1) == 0);
-					Global.objectiveTypeSetting = Global.count1;
-				End;
-			End;
-		End;
-		"If all players choose no preference, randomize"
-		If(Global.objectiveTypeSetting == 0);
-			If(Last Of(Global.objectiveTypeVotes) != -1);
-				Global.objectiveTypeSetting = Count Of(Global.objectiveTypeVotes) - 1;
-			Else;
-				While(Global.objectiveTypeSetting == 0 || Global.objectiveTypeVotes[Global.objectiveTypeSetting] == -1);
-					Global.objectiveTypeSetting = Random Integer(1, Count Of(Global.objectiveTypeVotes) - 1);
-				End;
-			End;
-		End;
 		Global.voting = False;
-		Start Rule(setObjectiveType, Restart Rule);
-	}
-}
-
-rule("setObjectiveType")
-{
-	event
-	{
-		Subroutine;
-		setObjectiveType;
-	}
-
-	actions
-	{
-		"Wait until game begins"
-		Wait Until(Is Game In Progress && !Global.specialGameModeSetup, 99999);
-		"Create objective positions"
-		While(Count Of(Global.objectiveTypes) < Workshop Setting Integer(Custom String("General"), Custom String("Number of Objectives"),
-			5, 0, 100, 0) + 1);
-			If(Global.objectiveTypeSetting != Count Of(Global.objectiveTypeVotes) - 1);
-				Modify Global Variable(objectiveTypes, Append To Array, Global.objectiveTypeSetting);
-			Else;
-				"Mixed objective assignment"
-				Modify Global Variable(objectiveTypes, Append To Array, Random Value In Array(Remove From Array(Global.mixedObjectivesPool,
-					Filtered Array(Global.objectiveTypes, Current Array Index > Count Of(Global.objectiveTypes) - 1 - (Count Of(
-					Global.mixedObjectivesPool) - 1)))));
-			End;
-			Global.objectiveCount1 = 0;
-			While(Count Of(Global.objectivePositions) < Count Of(Global.objectiveTypes));
-				"Limits possible map grid points to set min and max range from last created objective position"
-				Global.testPos = Random Value In Array(Count Of(Global.objectivePositions) == 0 ? Global.mapGrid : Filtered Array(Global.mapGrid,
-					Distance Between(Current Array Element, Last Of(Global.objectivePositions)) > First Of(Global.objectiveSpacing)
-					&& Distance Between(Current Array Element, Last Of(Global.objectivePositions)) < Min(100, First Of(Global.objectiveSpacing)
-					* 3)));
-				Global.testPos += Vector(0, 1, 0);
-				Wait(0.016, Ignore Condition);
-				"Minimum objective spacing"
-				If(Count Of(Global.objectivePositions) == 0 || Is True For All(Array Slice(Global.objectivePositions, Count Of(
-					Global.objectivePositions) - 5, 5), Distance Between(Global.testPos, Current Array Element) > Global.objectiveSpacing[1]));
-					"Ensures bosses spawn with head room"
-					If(Last Of(Global.objectiveTypes) != 3 || Is In Line of Sight(Global.testPos + Vector(0, 0, 0), Global.testPos + Vector(0, 10, 0),
-						Barriers Do Not Block LOS));
-						Modify Global Variable(objectivePositions, Append To Array, Global.testPos);
-						Global.objectiveCount1 = 0;
-					End;
-				End;
-				Global.objectiveCount1 += 1;
-				"If Too many attempts"
-				If(Global.objectiveCount1 > 50);
-					Modify Global Variable(objectivePositions, Remove From Array By Index, Count Of(Global.objectivePositions) - 1);
-					Modify Global Variable(objectivePositions, Remove From Array By Index, Count Of(Global.objectivePositions) - 1);
-					Global.objectiveCount1 = 0;
-				End;
-			End;
-		End;
-		"Last objective must be extraction objective"
-		Global.objectiveTypes[Count Of(Global.objectiveTypes) - 1] = 1;
-		Call Subroutine(objectivesManagement);
+		Wait Until(Is Game In Progress && Global.specialGameModeSetup == False, 9999);
 		Global.gameStatus = True;
 	}
 }
@@ -1264,55 +1069,6 @@ rule("GLOBAL MENU INITIALIZATION")
 	actions
 	{
 		Wait(0.016, Abort When False);
-		Global.startCamDistance = 6.500;
-		If(Global.specialGameMode);
-			If(Current Game Mode == Game Mode(Capture the Flag) || Current Game Mode == Game Mode(Push));
-				Global.startPos = Global.walkCenter + Direction From Angles(Random Real(0, 360), 0) * 300 + Vector(0, 15, 0);
-			Else If(Current Game Mode == Game Mode(Control));
-				Global.startPos = Global.walkCenter + Direction From Angles(Random Real(0, 360), 0) * 300 + Vector(0, 100, 0);
-			Else;
-				Global.startPos = Global.walkCenter + Direction From Angles(Random Real(0, 360), 0) * 150 + Vector(0, 30, 0);
-			End;
-			Global.startCamPos = Global.startPos + Vector(0, 1.500, 0) + Direction From Angles(Horizontal Angle From Direction(
-				Direction Towards(Global.walkCenter, Global.startPos)), 0) * Global.startCamDistance;
-			Wait(0.016, Ignore Condition);
-			Create Dummy Bot(Hero(Reaper), Team 1, -1, Nearest Walkable Position(Global.startPos), Vector(0, 0, 1));
-			Wait(0.016, Ignore Condition);
-			Set Invisible(All Players(Team 1), All);
-			Start Forcing Player Position(First Of(All Players(Team 1)), Global.startPos + Vector(0, 15, 0), True);
-			Start Facing(All Players(Team 1), Vector(0, 0, 1), 100000, To World, Direction and Turn Rate);
-		Else;
-			While(Global.startPos == Null);
-				Global.startPos = Objective Position(Random Integer(0, Current Game Mode != Game Mode(Assault) ? 2 : 1));
-				disabled Global.startPos = Objective Position(1);
-				Global.startCamPos = Global.startPos + Vector(0, 1.500, 0) + Direction From Angles(Random Real(0, 360), 0)
-					* Global.startCamDistance;
-				Global.startCamPos = Ray Cast Hit Position(Global.startCamPos, Global.startCamPos - Vector(0, 5, 0), Null, Null, False) + Vector(0,
-					1.500, 0);
-				Global.startPos = Vector(X Component Of(Global.startPos), Y Component Of(Global.startCamPos) - 1.500, Z Component Of(
-					Global.startPos));
-				Global.startPos = Ray Cast Hit Position(Global.startPos + Vector(0, 0.400, 0), Global.startPos - Vector(0, 5, 0), Null, Null,
-					False);
-				Global.startPos = Ray Cast Hit Position(Global.startCamPos - Vector(0, 0.750, 0), Global.startPos + Vector(0, 0.750, 0), Null,
-					Null, False) - Vector(0, 0.750, 0);
-				Global.startCamPos = Global.startPos + Vector(0, 1.500, 0) + Direction From Angles(Horizontal Angle From Direction(
-					Direction Towards(Global.startPos, Global.startCamPos)), 0) * Global.startCamDistance;
-				"Line of Sight Checks for each player position"
-				For Global Variable(count1, -26, 27, 2);
-					If(!Is In Line of Sight(Global.startCamPos, Global.startCamPos + Vector(0, -0.750, 0) + Direction From Angles(
-						Horizontal Angle From Direction(Direction Towards(Global.startCamPos, Global.startPos)) + Global.count1, 0)
-						* Global.startCamDistance, Barriers Do Not Block LOS) || !Is In Line of Sight(Global.startCamPos + Vector(0, -0.750, 0)
-						+ Direction From Angles(Horizontal Angle From Direction(Direction Towards(Global.startCamPos, Global.startPos))
-						+ Global.count1, 0) * Global.startCamDistance, Global.startCamPos, Barriers Do Not Block LOS));
-						Global.startPos = Null;
-						Break;
-					End;
-				End;
-				Wait(0.016, Ignore Condition);
-			End;
-		End;
-		Global.startMenuSpacingAngle = 40;
-		"Start screen objective description"
 		Set Objective Description(All Players(All Teams), Global.voting ? Custom String("Voting ends in {0}s", Round To Integer(
 			Match Time - Global.votingEndTime, Up)) : Custom String("Select your hero"), Visible To and String);
 	}
@@ -1347,34 +1103,17 @@ rule("EFFECTS/TEXTS")
 		"Workshop.codes/Discord Promo"
 		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.playerMenuStatus) < 2),
 			Round To Integer(Total Time Elapsed * 0.200, Up) % 2 == 0 ? Custom String("workshop.codes/MEBGG") : Custom String(
-			"Discord link in the game description"), Global.startCamPos + Direction From Angles(Horizontal Angle From Direction(
-			Direction Towards(Global.startCamPos, Global.startPos)), 30), 3, Do Not Clip, Visible To Position String and Color,
+			"Discord link in the game description"), Update Every Frame(Eye Position(Local Player) + Direction From Angles(Horizontal Facing Angle Of(Local Player), Vertical Facing Angle Of(Local Player) + 20) * 200), 3, Do Not Clip, Visible To Position String and Color,
 			Round To Integer(Total Time Elapsed * 0.200, Up) % 2 == 0 ? Color(Orange) : Color(Purple), Visible Never);
 		"Words of encouragement"
 		Create In-World Text(All Players(All Teams), Custom String("Words of Encouragement: {0}", Random Value In Array(
-			Global.wordsOfEncouragement)), Global.startCamPos + Direction From Angles(Horizontal Angle From Direction(Direction Towards(
-			Global.startCamPos, Global.startPos)), 35), 1.500, Do Not Clip, Visible To and Position, Color(White), Visible Never);
+			Global.wordsOfEncouragement)), Update Every Frame(Eye Position(Local Player) + Direction From Angles(Horizontal Facing Angle Of(Local Player), Vertical Facing Angle Of(Local Player) + 25) * 200), 1.500, Do Not Clip, Visible To and Position, Color(White), Visible Never);
 		"Voting options reminder"
 		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.playerMenuStatus) == 2),
 			Global.voting ? Custom String("Voting options are available in the top left corner of your screen") : Custom String(
 			"Voting is complete. See the game settings in the top left corner of your screen."),
-			Global.startCamPos + Direction From Angles(Horizontal Angle From Direction(Direction Towards(Global.startCamPos,
-			Global.startPos)), 30), 2, Do Not Clip, Visible To Position String and Color, Global.voting ? Color(Aqua) : Color(Purple),
+			Update Every Frame(Eye Position(Local Player) + Direction From Angles(Horizontal Facing Angle Of(Local Player), Vertical Facing Angle Of(Local Player) + 20) * 200), 2, Do Not Clip, Visible To Position String and Color, Global.voting ? Color(Aqua) : Color(Purple),
 			Visible Never);
-		"Ready In World Text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.playerMenuStatus) == 1), Custom String(
-			"Ready [{0}]", Input Binding String(Button(Jump))), Local Player.startPos + Vector(0, 1.920, 0), 1, Do Not Clip,
-			Visible To Position String and Color, Color(Green), Visible Never);
-		"Change Hero In World Text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.playerMenuStatus)
-			== 1 && Match Time > 2.500), Custom String("Change Hero [{0}]", Input Binding String(Button(Crouch))),
-			Local Player.startPos + Vector(0, 1.800, 0), 1, Do Not Clip, Visible To Position String and Color, Color(Orange),
-			Visible Never);
-		"Cancel In World Text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.playerMenuStatus)
-			== 2 && Match Time > 2.500), Custom String("Cancel [{0}]", Input Binding String(Button(Crouch))),
-			Local Player.startPos + Vector(0, -0.600, 0), 1, Do Not Clip, Visible To Position String and Color, Custom Color(255, 49, 49,
-			255), Visible Never);
 		Create HUD Text(Filtered Array(All Players(All Teams), Current Array Element.playerMenuStatus[2] == 0), Custom String(
 			"Difficulty: No Preference"), Null, Custom String("Change Vote (Press [{0}])", Input Binding String(Button(Ultimate))), Left,
 			0, Color(Aqua), Color(Aqua), Color(Aqua), Visible To and String, Default Visibility);
@@ -1661,7 +1400,6 @@ rule("PLAYER MENU INITIALIZATION")
 	conditions
 	{
 		Global.specialGameModeSetup == True;
-		Global.startMenuSpacingAngle != 0;
 	}
 
 	actions
@@ -1679,59 +1417,7 @@ rule("PLAYER MENU INITIALIZATION")
 			Event Player.playerMenuStatus[3] = Global.zombieSetting;
 			Event Player.playerMenuStatus[4] = Global.objectiveTypeSetting;
 		End;
-		Event Player.startPos = Global.startCamPos + Vector(0, -1.500, 0) + Direction From Angles(Horizontal Angle From Direction(
-			Direction Towards(Global.startCamPos, Global.startPos)) + Global.startMenuSpacingAngle + Slot Of(Event Player) * (
-			Global.startMenuSpacingAngle * -2 / Max(Number Of Slots(Team 2) - 1, 1)), 0) * Global.startCamDistance;
-		If(!Global.specialGameMode);
-			Event Player.startPos = Ray Cast Hit Position(Event Player.startPos + Vector(0, 3, 0), Event Player.startPos, All Players(
-				All Teams), All Players(All Teams), False);
-		End;
 		Call Subroutine(enableDisableAbilities);
-	}
-}
-
-rule("EFFECTS/TEXT")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.specialGameModeSetup == True;
-		Event Player.playerActiveStatus == True;
-	}
-
-	actions
-	{
-		If(!Global.specialGameMode);
-			"Invis start ring"
-			Create Effect(Filtered Array(All Players(All Teams), First Of(Event Player.playerMenuStatus) < 2), Ring, Color(Sky Blue),
-				Event Player.startPos, 0.500, Visible To Position and Radius);
-		Else;
-			"Invis start light shaft"
-			Create Effect(Filtered Array(All Players(All Teams), First Of(Event Player.playerMenuStatus) < 2), Light Shaft, Color(Sky Blue),
-				Event Player.startPos + Vector(0, -10, 0), 0.500, Visible To Position and Radius);
-		End;
-		"In world hero text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Event Player.playerMenuStatus) < 2), First Of(
-			Event Player.playerMenuStatus) == 1 ? Hero Icon String(Hero Of(Event Player)) : Custom String("?"),
-			Event Player.startPos + Vector(0, 0.500, 0), 3, Do Not Clip, Visible To Position and String, Color(White), Default Visibility);
-		"Selecting hero text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Event Player.playerMenuStatus)
-			< 2 && Event Player.playerMenuStatus[1] == 0), First Of(Event Player.playerMenuStatus) < 1 ? Custom String("SELECTING HERO...")
-			: Custom String("Getting Ready..."), Event Player.startPos + Vector(0, 1.500, 0), 1.500, Do Not Clip,
-			Visible To Position and String, Color(Sky Blue), Default Visibility);
-		"Voting text"
-		Create In-World Text(Filtered Array(All Players(All Teams), Event Player.playerMenuStatus[1] == 1), Custom String("Voting..."),
-			Event Player.startPos + Vector(0, First Of(Event Player.playerMenuStatus) < 2 ? 1.500 : -1, 0), 1.500, Do Not Clip,
-			Visible To Position and String, Color(Purple), Default Visibility);
-		"Name text"
-		Create In-World Text(Filtered Array(All Players(All Teams), First Of(Event Player.playerMenuStatus) < 2), Event Player,
-			Event Player.startPos + Vector(0, -1, 0), 1.500, Do Not Clip, Visible To Position and String, Color(Aqua), Default Visibility);
 	}
 }
 
@@ -1747,7 +1433,6 @@ rule("PLAYER SELECTS/RESELECTS HERO")
 	conditions
 	{
 		Global.specialGameModeSetup == True;
-		Global.startMenuSpacingAngle != 0;
 		Event Player.playerMenuStatus[0] == 0;
 		Has Spawned(Event Player) == True;
 	}
@@ -1756,85 +1441,14 @@ rule("PLAYER SELECTS/RESELECTS HERO")
 	{
 		Wait(0.016, Abort When False);
 		Start Rule(setPrematchTimer, Restart Rule);
-		Set Invisible(Event Player, All);
-		Start Camera(Event Player, Global.startCamPos, Global.startPos + Vector(0, 1, 0), 0);
-		Start Heal Over Time(Event Player, Null, 5, 1000);
-		Set Status(Event Player, Null, Invincible, 9999);
-		Set Status(Event Player, Null, Rooted, 9999);
-		"If current game mode is team deathmatch"
-		If(Global.specialGameMode);
-			Attach Players(Event Player, First Of(All Players(Team 1)), Local Vector Of(Event Player.startPos, First Of(All Players(Team 1)),
-				Rotation And Translation));
-		Else;
-			Teleport(Event Player, Event Player.startPos);
-		End;
-		Wait(0.016, Ignore Condition);
-		Set Facing(Event Player, Direction Towards(Event Player.startPos, Vector(X Component Of(Global.startCamPos), Y Component Of(
-			Event Player.startPos), Z Component Of(Global.startCamPos))), To World);
-		Wait(0.016, Ignore Condition);
-		Event Player.playerMenuStatus[0] = 1;
+		Event Player.playerMenuStatus[0] = 2;
 		Wait(0.016, Ignore Condition);
 		If(!Event Player.playerActiveStatus);
 			Small Message(Event Player, Custom String(
 				"Use the voting options in the top left corner of your screen to adjust the game settings"));
 			Event Player.playerActiveStatus = True;
-			Wait(5, Restart When True);
-			"Force players that have not voted or selected an enhancement to lock in their hero"
-			If((Global.voting && Is True For All(Array Slice(Event Player.playerMenuStatus, 2, 3),
-				Current Array Element == 0 && Event Player.enhancementValues[0] == 0)) || (
-				!Global.voting && Event Player.enhancementValues[0] == 0));
-				Press Button(Event Player, Button(Jump));
-			End;
 		End;
 		Loop If Condition Is True;
-	}
-}
-
-rule("PLAYER MENU CONTROLS (JUMP AND CROUCH, CHANGE HERO/READY)")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.specialGameModeSetup == True;
-		Event Player.playerMenuStatus[0] > 0;
-		(Is Button Held(Event Player, Button(Jump)) || Is Button Held(Event Player, Button(Crouch))) == True;
-		Has Spawned(Event Player) == True;
-	}
-
-	actions
-	{
-		"Player indicates they are ready"
-		If(Is Button Held(Event Player, Button(Jump)));
-			If(First Of(Event Player.playerMenuStatus) < 2);
-				Event Player.playerMenuStatus[0] += 1;
-				If(First Of(Event Player.playerMenuStatus) == 2);
-					Start Rule(setPrematchTimer, Restart Rule);
-					Start Rule(randomActions, Restart Rule);
-					Set Invisible(Event Player, None);
-				End;
-			End;
-		"Not ready or change hero"
-		Else If(Is Button Held(Event Player, Button(Crouch)) && Match Time > 2.500);
-			Set Invisible(Event Player, All);
-			If(First Of(Event Player.playerMenuStatus) > 0);
-				Event Player.playerMenuStatus[0] += -1;
-				Start Rule(setPrematchTimer, Restart Rule);
-				If(First Of(Event Player.playerMenuStatus) == 0);
-					"Update player voting status"
-					Event Player.playerMenuStatus[1] = 0;
-					Set Player Allowed Heroes(Event Player, Remove From Array(All Heroes, Hero Of(Event Player)));
-					Wait Until(!Has Spawned(Event Player), 1);
-					Wait(0.016, Ignore Condition);
-					Set Player Allowed Heroes(Event Player, All Heroes);
-				End;
-			End;
-		End;
 	}
 }
 
@@ -1938,56 +1552,6 @@ rule("PLAYER MENU CONTROLS (ABILITY 1, ZOMBIE VOTE)")
 	}
 }
 
-rule("PLAYER MENU CONTROLS (ABILITY 2, OBJECTIVE TYPE VOTE)")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.voting == True;
-		Global.specialGameModeSetup == True;
-		Has Spawned(Event Player) == True;
-		Is Button Held(Event Player, Button(Ability 2)) == True;
-	}
-
-	actions
-	{
-		"Update player voting status"
-		Event Player.playerMenuStatus[1] = 1;
-		If(!Is Button Held(Event Player, Button(Secondary Fire)));
-			If(Event Player.playerMenuStatus[4] < Count Of(Global.objectiveTypeVotes) - 1);
-				Event Player.playerMenuStatus[4] += 1;
-			Else;
-				Event Player.playerMenuStatus[4] = 0;
-			End;
-			While(!Global.objectiveTypeVotes[Event Player.playerMenuStatus[4]][1]);
-				If(Event Player.playerMenuStatus[4] < Count Of(Global.objectiveTypeVotes) - 1);
-					Event Player.playerMenuStatus[4] += 1;
-				Else;
-					Event Player.playerMenuStatus[4] = 0;
-				End;
-			End;
-		Else;
-			If(Event Player.playerMenuStatus[4] > 0);
-				Event Player.playerMenuStatus[4] += -1;
-			Else;
-				Event Player.playerMenuStatus[4] = Count Of(Global.objectiveTypeVotes) - 1;
-			End;
-			While(!Global.objectiveTypeVotes[Event Player.playerMenuStatus[4]][1]);
-				If(Event Player.playerMenuStatus[4] > 0);
-					Event Player.playerMenuStatus[4] += -1;
-				Else;
-					Event Player.playerMenuStatus[4] = Count Of(Global.objectiveTypeVotes) - 1;
-				End;
-			End;
-	}
-}
-
 rule("PLAYER MENU CONTROLS (MELEE , ENHANCEMENT SELECTION)")
 {
 	event
@@ -2050,7 +1614,6 @@ rule("UPDATE PREGAME VOTING STATUS")
 		Event Player.playerMenuStatus[1] == 1;
 		Is Button Held(Event Player, Button(Ultimate)) == False;
 		Is Button Held(Event Player, Button(Ability 1)) == False;
-		Is Button Held(Event Player, Button(Ability 2)) == False;
 	}
 
 	actions
@@ -2059,73 +1622,6 @@ rule("UPDATE PREGAME VOTING STATUS")
 		Wait(2, Abort When False);
 		Event Player.playerMenuStatus[1] = 0;
 		Start Rule(setPrematchTimer, Restart Rule);
-	}
-}
-
-rule("PREVENT PLAYERS FROM LEAVING START EARLY")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.specialGameModeSetup == True;
-		Has Spawned(Event Player) == True;
-		First Of(Event Player.playerMenuStatus) > 0;
-		Distance Between(Position Of(Event Player), Vector(X Component Of(Event Player.startPos), Y Component Of(Position Of(
-			Event Player)), Z Component Of(Event Player.startPos))) > 0.600;
-	}
-
-	actions
-	{
-		Wait(2, Abort When False);
-		If(!Global.specialGameMode);
-			Teleport(Event Player, Event Player.startPos);
-		Else;
-			Attach Players(Event Player, First Of(All Players(Team 1)), Local Vector Of(Event Player.startPos, First Of(All Players(Team 1)),
-				Rotation And Translation));
-		End;
-		Loop If Condition Is True;
-	}
-}
-
-rule("randomActions")
-{
-	event
-	{
-		Subroutine;
-		randomActions;
-	}
-
-	actions
-	{
-		Event Player.randVal = Random Integer(1, 4);
-		"Random emote"
-		If(Event Player.randVal <= 1);
-			Communicate(Event Player, Emote Up);
-		Else If(Event Player.randVal <= 2);
-			Communicate(Event Player, Emote Down);
-		Else If(Event Player.randVal <= 3);
-			Communicate(Event Player, Emote Left);
-		Else If(Event Player.randVal <= 4);
-			Communicate(Event Player, Emote Right);
-		End;
-		Wait(1, Ignore Condition);
-		Event Player.randVal = Random Integer(1, 4);
-		"Random voice line"
-		If(Event Player.randVal <= 1);
-			Communicate(Event Player, Voice Line Up);
-		Else If(Event Player.randVal <= 2);
-			Communicate(Event Player, Voice Line Down);
-		Else If(Event Player.randVal <= 3);
-			Communicate(Event Player, Voice Line Left);
-		Else If(Event Player.randVal <= 4);
-			Communicate(Event Player, Voice Line Right);
-		End;
 	}
 }
 
@@ -2486,7 +1982,7 @@ rule("EXTRACTION ZONE INFECTION INCREASE")
 	}
 }
 
-rule("WIN/LOSS CONDITIONS")
+disabled rule("WIN/LOSS CONDITIONS")
 {
 	event
 	{
