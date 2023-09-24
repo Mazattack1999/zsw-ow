@@ -1886,6 +1886,28 @@ rule("EFFECTS/TEXTS")
 	}
 }
 
+rule("PLAYER GET DOWNED")
+{
+	event
+	{
+		Player Dies;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Event Was Health Pack == True;
+	}
+
+	actions
+	{
+		Event Plyaer.blinded = False; 
+		Event Player.infected = False;
+		Event Player.infectionLvl = 0;
+	}
+}
+
 rule("UPDATE BOT OUTLINE COLORS AND VISIBILITY")
 {
 	event
@@ -2810,13 +2832,13 @@ rule("BOTS INFLICT DAMAGE OVER TIME (INFECTION LEVEL MANAGEMENT)")
 		If(Event Player.damageOverTimeDuration < Event Player.biteDuration);
 			Event Player.damageOverTimeDuration = Event Player.biteDuration;
 		End;
-		If(Workshop Setting Toggle(Custom String("Infection"), Custom String("Melee Infection Enabled"), False, 0) && !Has Status(
+		If(Workshop Setting Toggle(Custom String("Infection"), Custom String("Melee Infection Enabled"), True, 0) && !Has Status(
 			Event Player, Hacked) && !Is Dummy Bot(Victim) && Health(Victim) <= Victim.initialMaxHealth);
 			If(Victim.infected);
 				Victim.infectionLvl += 1 / Workshop Setting Integer(Custom String("Infection"), Custom String("Hits to increase infection level"),
-					2, 1, 20, 2);
+					4, 1, 20, 2);
 			Else;
-				Victim.infectionLvl += 1 / Workshop Setting Integer(Custom String("Infection"), Custom String("Hits to get infected"), 4, 1, 20,
+				Victim.infectionLvl += 1 / Workshop Setting Integer(Custom String("Infection"), Custom String("Hits to get infected"), 8, 1, 20,
 					1);
 			End;
 			If(!Victim.infected && Victim.infectionLvl >= 1);
@@ -6436,7 +6458,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 	{
 		Has Spawned(Event Player) == True;
 		Global.gameStatus == True;
-		((!Is In Spawn Room(Event Player) && Event Player.enhancementValues[0] != Event Player.currentEnhancement)) == True;
+		!Is In Spawn Room(Event Player) == True;
 		Is Dummy Bot(Event Player) != True;
 	}
 
