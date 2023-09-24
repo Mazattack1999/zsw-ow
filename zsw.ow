@@ -751,6 +751,7 @@ rule("START GAME")
 		Wait(0.250, Ignore Condition);
 		Set Match Time(Global.startTime + Global.matchEndTime);
 		Unpause Match Time;
+		Call Subroutine(createEnhancementSelectHud);
 	}
 }
 
@@ -1157,69 +1158,7 @@ rule("EFFECTS/TEXTS")
 			Global.voting ? Custom String("Change Vote (Press [{0}])", Input Binding String(Button(Ability 1))) : Custom String(""), Left,
 			1, Global.specialEffectsTiming ? Color(White) : Color(Turquoise), Color(White), Global.specialEffectsTiming ? Color(White)
 			: Color(Turquoise), Visible To String and Color, Default Visibility);
-		"Enhancement Selection: No Preference"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 0), Custom String(
-			"Enhancement: No Preference"), Null, Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))),
-			Left, 3, Color(Aqua), Color(Aqua), Color(Aqua), Visible To and String, Default Visibility);
-		"Enhancement Selection: Infection Resistance"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 1), Custom String(
-			"Enhancement: Infection Resistance {0}", Icon String(Poison 2)), Custom String("Infection level decreases slowly over time"),
-			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Green), Color(Green),
-			Color(Green), Visible To and String, Default Visibility);
-		"Enhancement Selection: Scavenger"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 2), Custom String(
-			"Enhancement: Scavenger {0}", Ability Icon String(Hero Of(Local Player), Button(Primary Fire))), Custom String(
-			"Player collects ammunition from zombies they kill"), Custom String("Change Selection (Press [{0}])", Input Binding String(
-			Button(Melee))), Left, 3, Color(Gray), Color(Gray), Color(Gray), Visible To and String, Default Visibility);
-		"Enhancement Selection: Laser Barricade"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 3), Custom String(
-			"Enhancement: Laser Barricade {0}", Ability Icon String(Hero(Reinhardt), Button(Secondary Fire))), Custom String(
-			"Player can place a wall that blocks zombies"), Custom String("Change Selection (Press [{0}])", Input Binding String(Button(
-			Melee))), Left, 3, Color(Blue), Color(Blue), Color(Blue), Visible To and String, Default Visibility);
-		"Enhancement Selection: Brain Killer"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 4), Custom String(
-			"Enhancement: Brain Killer {0}", Icon String(Skull)), Custom String("Critical hits do more damage"), Custom String(
-			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Red), Color(Red), Color(Red),
-			Visible To and String, Default Visibility);
-		"Enhancement Selection: Pyrotechnic"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 5), Custom String(
-			"Enhancement: Pyrotechnic {0}", Icon String(Fire)), Custom String("Dealing damage, at close range, sets enemies on fire"),
-			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Orange), Color(Orange),
-			Color(Orange), Visible To and String, Default Visibility);
-		"Enhancement Selection: Plague Doctor"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 6), Custom String(
-			"Enhancement: Plague Doctor {0}", Icon String(Plus)), Custom String(
-			"Deal more healing to infected players while reducing their infection level"), Custom String("Change Selection (Press [{0}])",
-			Input Binding String(Button(Melee))), Left, 3, Color(Green), Color(Green), Color(Green), Visible To and String,
-			Default Visibility);
-		"Enhancement Selection: Born to Battle"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 7), Custom String(
-			"Enhancement: Born to Battle {0}", Icon String(Bolt)), Custom String(
-			"Dealing a final blow will give the player a cooldown reset on the next ability they use"), Custom String(
-			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Gray), Color(Gray), Color(Gray),
-			Visible To and String, Default Visibility);
-		"Enhancement Selection: Kevlar"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 8), Custom String(
-			"Enhancement: Kevlar {0}", Icon String(Stop)), Custom String(
-			"Survivor is equipped with armor that protects against infectious bites"), Custom String("Change Selection (Press [{0}])",
-			Input Binding String(Button(Melee))), Left, 3, Custom Color(240, 129, 26, 255), Custom Color(240, 129, 26, 255), Custom Color(
-			240, 129, 26, 255), Visible To and String, Default Visibility);
-		"Enhancement Selection: Nano Nurse"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 9), Custom String(
-			"Enhancement: Nano Nurse {0}", Icon String(Plus)), Custom String(
-			"Survivor is infused with nano technology that regenerates health after taking damage "), Custom String(
-			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Yellow), Color(Yellow), Color(Yellow),
-			Visible To and String, Default Visibility);
-		"Enhancement Selection: Hitchhiker"
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 10), Custom String(
-			"Enhancement: Hitchhiker {0}", Ability Icon String(Hero(Zenyatta), Button(Ultimate))), Custom String(
-			"Survivor can ride on the backs of their teammates"), Custom String("Change Selection (Press [{0}])", Input Binding String(
-			Button(Melee))), Left, 3, Color(Purple), Color(Purple), Color(Purple), Visible To and String, Default Visibility);
-		"Enhancement Selection: P.U.P."
-		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 11), Custom String(
-			"Enhancement: P.U.P. {0}", Icon String(Happy)), Custom String("Survivor is equipped with an autonomous friendly droid"),
-			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 3, Color(Blue), Color(Blue), Color(
-			Blue), Visible To and String, Default Visibility);
+		Call Subroutine(createEnhancementSelectHud);
 	}
 }
 
@@ -6682,7 +6621,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			"Ammo amount"
 			Create In-World Text(Filtered Array(Event Player, Event Player.enhancementChase1 != 0), Custom String("{0} Ammo", Round To Integer(
 				Max Ammo(Event Player, Is In Alternate Form(Event Player) && Max Ammo(Event Player, 1) > 0 ? 1 : 0) / 3, Up)),
-				Event Player.enhancementChase1, 1, Clip Against Surfaces, Visible To Position and String, Color(White), Default Visibility);
+				Event Player.enhancementChase1, 1, Do Not Clip, Visible To Position and String, Color(White), Default Visibility);
 			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 		"Laser Barricade"
 		Else If(Event Player.enhancementValues[0] == 3);
@@ -6853,7 +6792,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 	}
 }
 
-rule("playerObjectiveEntityMangement")
+rule("destroyPlayerEnhancementEntities")
 {
 	event
 	{
@@ -6878,9 +6817,85 @@ rule("playerObjectiveEntityMangement")
 		Event Player.enhancementChase1 = Null;
 		Event Player.enhancementChase2 = Null;
 		Stop Chasing Player Variable(Event Player, infectionLvl);
-		For Player Variable(Event Player, entityCount, 1, Count Of(Event Player.enhancementValues), 1);
-			Event Player.enhancementValues[Event Player.entityCount] = Null;
+		While(Event Player.enhancementValues[1] != Null);
+			Modify Player Variable(Event Player, enhancementValues, Remove From Array By Index, 1);
 		End;
+	}
+}
+
+rule("createEnhancementSelectHud")
+{
+	event
+	{
+		Subroutine;
+		createEnhancementSelectHud;
+	}
+
+	actions
+	{
+		"Enhancement Selection: No Preference"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 0 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: No Preference"), Null, Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))),
+			Left, 101, Color(Aqua), Color(Aqua), Color(Aqua), Visible To and String, Default Visibility);
+		"Enhancement Selection: Infection Resistance"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 1 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Infection Resistance {0}", Icon String(Poison 2)), Custom String("Infection level decreases slowly over time"),
+			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Green), Color(Green),
+			Color(Green), Visible To and String, Default Visibility);
+		"Enhancement Selection: Scavenger"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 2 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Scavenger {0}", Ability Icon String(Hero Of(Local Player), Button(Primary Fire))), Custom String(
+			"Player collects ammunition from zombies they kill"), Custom String("Change Selection (Press [{0}])", Input Binding String(
+			Button(Melee))), Left, 101, Color(Gray), Color(Gray), Color(Gray), Visible To and String, Default Visibility);
+		"Enhancement Selection: Laser Barricade"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 3 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Laser Barricade {0}", Ability Icon String(Hero(Reinhardt), Button(Secondary Fire))), Custom String(
+			"Player can place a wall that blocks zombies"), Custom String("Change Selection (Press [{0}])", Input Binding String(Button(
+			Melee))), Left, 101, Color(Blue), Color(Blue), Color(Blue), Visible To and String, Default Visibility);
+		"Enhancement Selection: Brain Killer"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 4 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Brain Killer {0}", Icon String(Skull)), Custom String("Critical hits do more damage"), Custom String(
+			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Red), Color(Red), Color(Red),
+			Visible To and String, Default Visibility);
+		"Enhancement Selection: Pyrotechnic"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 5 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Pyrotechnic {0}", Icon String(Fire)), Custom String("Dealing damage, at close range, sets enemies on fire"),
+			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Orange), Color(Orange),
+			Color(Orange), Visible To and String, Default Visibility);
+		"Enhancement Selection: Plague Doctor"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 6 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Plague Doctor {0}", Icon String(Plus)), Custom String(
+			"Deal more healing to infected players while reducing their infection level"), Custom String("Change Selection (Press [{0}])",
+			Input Binding String(Button(Melee))), Left, 101, Color(Green), Color(Green), Color(Green), Visible To and String,
+			Default Visibility);
+		"Enhancement Selection: Born to Battle"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 7 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Born to Battle {0}", Icon String(Bolt)), Custom String(
+			"Dealing a final blow will give the player a cooldown reset on the next ability they use"), Custom String(
+			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Gray), Color(Gray), Color(Gray),
+			Visible To and String, Default Visibility);
+		"Enhancement Selection: Kevlar"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 8 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Kevlar {0}", Icon String(Stop)), Custom String(
+			"Survivor is equipped with armor that protects against infectious bites"), Custom String("Change Selection (Press [{0}])",
+			Input Binding String(Button(Melee))), Left, 101, Custom Color(240, 129, 26, 255), Custom Color(240, 129, 26, 255), Custom Color(
+			240, 129, 26, 255), Visible To and String, Default Visibility);
+		"Enhancement Selection: Nano Nurse"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 9 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Nano Nurse {0}", Icon String(Plus)), Custom String(
+			"Survivor is infused with nano technology that regenerates health after taking damage "), Custom String(
+			"Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Yellow), Color(Yellow), Color(Yellow),
+			Visible To and String, Default Visibility);
+		"Enhancement Selection: Hitchhiker"
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 10 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: Hitchhiker {0}", Ability Icon String(Hero(Zenyatta), Button(Ultimate))), Custom String(
+			"Survivor can ride on the backs of their teammates"), Custom String("Change Selection (Press [{0}])", Input Binding String(
+			Button(Melee))), Left, 101, Color(Purple), Color(Purple), Color(Purple), Visible To and String, Default Visibility);
+		"Enhancement Selection: P.U.P."
+		Create HUD Text(Filtered Array(All Players(All Teams), First Of(Current Array Element.enhancementValues) == 11 && (Global.specialGameModeSetup || Is In Spawn Room(Current Array Element))), Custom String(
+			"Enhancement: P.U.P. {0}", Icon String(Happy)), Custom String("Survivor is equipped with an autonomous friendly droid"),
+			Custom String("Change Selection (Press [{0}])", Input Binding String(Button(Melee))), Left, 101, Color(Blue), Color(Blue), Color(
+			Blue), Visible To and String, Default Visibility);
 	}
 }
 
