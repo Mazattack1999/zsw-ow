@@ -141,7 +141,7 @@ settings
 variables
 {
 	global:
-		0: objectivePositions
+		0: currentObjectiveIndex
 		1: walkCenter
 		2: objectiveCaptureValue
 		3: startPos
@@ -678,6 +678,8 @@ rule("VARIABLE ASSIGNMENT")
 			Global.walkCenter = Objective Position(Objective Index);
 		End;
 		Start Rule(generateMapGrid, Do Nothing);
+		Global.currentObjectiveIndex = Objective Index;
+		Global.objectiveCaptureValue = 1;
 		Global.objectiveValue = 0;
 		Global.objectiveEntities = Empty Array;
 		Global.botSpawnPoints = Empty Array;
@@ -691,7 +693,6 @@ rule("VARIABLE ASSIGNMENT")
 		Global.invisibilityHeros = Array(Hero(Sombra), Hero(Moira), Hero(Doomfist), Hero(Tracer));
 		Global.users = Empty Array;
 		Global.globalPlayerStats = Array(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
-		Global.objectivePositions = Empty Array;
 		Global.objectiveTypes = Empty Array;
 		Global.objectiveRad = 10;
 		Global.reviveRadius = 5;
@@ -1652,39 +1653,6 @@ rule("EFFECTS/TEXTS")
 	}
 }
 
-rule("PLAYER EXTRACTION CONTROL")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Array Contains(Global.evacuatingSurvivorList, Event Player) == True;
-	}
-
-	actions
-	{
-		Event Player.chase2 = Position Of(Event Player);
-		Chase Player Variable At Rate(Event Player, chase2, Event Player.chase2 + Vector(0, 200, 0), Global.evacRate,
-			Destination and Rate);
-		Start Forcing Player Position(Event Player, Event Player.chase2, True);
-		Wait Until(Global.evacRate > 2, 99999);
-		Chase Player Variable Over Time(Event Player, chase2, First Of(Global.objectivePositions) + Vector(0, 50, 0)
-			+ Direction From Angles(360 / Count Of(Global.evacuatingSurvivorList) * Index Of Array Value(Global.evacuatingSurvivorList,
-			Event Player), 0) * 3, 5, Destination and Duration);
-		Wait Until(Global.evacRate < 10, 99999);
-		Chase Player Variable At Rate(Event Player, chase2, Event Player.chase2 + Vector(0, 200, 0), Global.evacRate,
-			Destination and Rate);
-		Event Player.evacPos = Event Player.chase2 + Direction Towards(First Of(Global.objectivePositions), Global.evacDestination) * 700;
-		Wait Until(Global.evacRate > 2, 99999);
-		Chase Player Variable At Rate(Event Player, chase2, Event Player.evacPos, Global.evacRate, Destination and Rate);
-	}
-}
-
 disabled rule("PREVENT MATCH TIME FROM UNPAUSING")
 {
 	event
@@ -1735,6 +1703,27 @@ disabled rule("TRIGGER OVERTIME MUSIC")
 					Global.bosses, Current Array Element))), Objective Position(0));
 			End;
 		End;
+	}
+}
+
+rule("OBJECTIVE CAPTURED")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.gameStatus == True;
+		Global.currentObjectiveIndex != Objective Index;
+	}
+
+	actions
+	{
+		Global.currentObjectiveIndex = Objective Index;
+		Global.objectiveCaptureValue = Distance Between(Objective Position(Objective Index - 1), Objective Position(Objective Index));
+		Set Match Time(Match Time - (60 * 2));
 	}
 }
 
@@ -1801,75 +1790,6 @@ disabled rule("============================================== OBJECTIVE TYPE: EX
 	}
 }
 
-rule("PLAYERS IN EXTRACTION POINT CONTROL")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.objectiveComplete == False;
-		Global.gameStatus == True;
-		Has Spawned(Event Player) == True;
-		First Of(Global.objectiveTypes) == 1;
-		Count Of(Global.objectivePositions) == 1;
-		Y Component Of(First Of(Global.objectivePositions)) - Y Component Of(Eye Position(Event Player)) < 2;
-		Distance Between(Position Of(Event Player), Vector(X Component Of(First Of(Global.objectivePositions)), Y Component Of(Position Of(
-			Event Player)), Z Component Of(First Of(Global.objectivePositions)))) < Global.objectiveRad;
-	}
-
-	actions
-	{
-		If(!Array Contains(Global.playersOnObjective, Event Player));
-			Modify Global Variable(playersOnObjective, Append To Array, Event Player);
-		End;
-		Wait(0.500, Ignore Condition);
-		Loop If Condition Is True;
-		If(Global.gameStatus);
-			Modify Global Variable(playersOnObjective, Remove From Array By Value, Event Player);
-	}
-}
-
-rule("EXTRACTION ZONE INFECTION INCREASE")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.gameStatus == True;
-		Is Alive(Event Player) == True;
-		Count Of(Global.objectivePositions) == 1;
-		Global.extractionZoneRad < 200;
-		Distance Between(First Of(Global.objectivePositions), Position Of(Event Player)) > Global.extractionZoneRad;
-		Array Contains(Global.playersOnObjective, Event Player) == False;
-	}
-
-	actions
-	{
-		Wait(1, Abort When False);
-		Event Player.infectionLvl += 1;
-		If(!Event Player.infected && Event Player.infectionLvl >= 1);
-			Event Player.infected = True;
-		End;
-		"Kick players out of the spawn room if dome is closing in."
-		While(Is In Spawn Room(Event Player));
-			Teleport(Event Player, Nearest Walkable Position(Position Of(Event Player) + Direction Towards(Position Of(Event Player), First Of(
-				Global.objectivePositions)) * 10));
-			Wait(0.125, Ignore Condition);
-		End;
-		Loop;
-	}
-}
-
 disabled rule("============================================== PLAYERS GAME IN PROGRESS ====================================================")
 {
 	event
@@ -1918,49 +1838,6 @@ rule("PLAYER INITIALIZATION")
 		Event Player.size = 1;
 		"Player joins midgame"
 		If(First Of(Event Player.playerMenuStatus) == 0 && False);
-			"Player joins game fo the first time"
-			If(!Array Contains(Global.users, Custom String("{0}", Event Player)));
-				Call Subroutine(updateUsers);
-				Teleport(Event Player, Nearest Walkable Position(Position Of(First Of(Sorted Array(Remove From Array(Global.playerTargetList,
-					Event Player), Distance Between(Position Of(Current Array Element), First Of(Global.objectivePositions)))))));
-				Set Status(Event Player, Null, Invincible, 10);
-				Small Message(Event Player, Custom String("Help your teammates with completing objectives"));
-				Event Player.playerActiveStatus = True;
-			"Player rejoins game after having left"
-			Else;
-				"Index of user in user array"
-				Event Player.userIndex = Index Of Array Value(Global.users, Custom String("{0}", Event Player));
-				Event Player.deathTimer = Global.globalPlayerStats[Event Player.userIndex][1];
-				Event Player.reviveTimer = Global.globalPlayerStats[Event Player.userIndex][2];
-				Event Player.reviveStartTime = Global.globalPlayerStats[Event Player.userIndex][3];
-				"Player was alive when they left"
-				If(First Of(Global.globalPlayerStats[Event Player.userIndex]) == 0);
-					Teleport(Event Player, Nearest Walkable Position(Position Of(First Of(Sorted Array(Remove From Array(Global.playerTargetList,
-						Event Player), Distance Between(Position Of(Current Array Element), First Of(Global.objectivePositions)))))));
-					Set Status(Event Player, Null, Phased Out, 10);
-					Small Message(Event Player, Custom String("Help your teammates with completing objectives"));
-					Event Player.playerActiveStatus = True;
-				"Player was downed when they left"
-				Else If(First Of(Global.globalPlayerStats[Event Player.userIndex]) == 1);
-					Teleport(Event Player, Global.globalPlayerStats[Event Player.userIndex][4]);
-					While(Is Alive(Event Player));
-						Kill(Event Player, Null);
-						Wait(0.500, Ignore Condition);
-					End;
-					Event Player.playerActiveStatus = True;
-					Big Message(Event Player, Custom String("You are downed"));
-					Wait(0.500, Ignore Condition);
-					Small Message(Event Player, Custom String("Wait for a teammate to revive you"));
-				"Player was dead when they left"
-				Else If(First Of(Global.globalPlayerStats[Event Player.userIndex]) == 2);
-					Event Player.playerActiveStatus = False;
-					Teleport(Event Player, Global.globalPlayerStats[Event Player.userIndex][4]);
-					Big Message(Event Player, Custom String("You are dead"));
-					Wait(0.500, Ignore Condition);
-					Small Message(Event Player, Custom String("Please wait for the next round to begin"));
-					Set Invisible(Event Player, All);
-				End;
-			End;
 		"Player joined on start screen"
 		Else;
 			Event Player.playerActiveStatus = True;
@@ -2247,29 +2124,6 @@ rule("PLAYER AUTOMATIC RELOAD")
 	}
 }
 
-rule("OBJECTIVE CHANGES AND PLAYER ENTITIES UPDATE")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Global.gameStatus == True;
-		Has Spawned(Event Player) == True;
-		(Event Player.objectiveValue != Global.objectiveValue || Count Of(Global.objectivePositions) == 1) == True;
-		Is Dummy Bot(Event Player) == False;
-	}
-
-	actions
-	{
-		Call Subroutine(destroyPlayerEnhancementEntities);
-	}
-}
-
 rule("PLAYER TARGET (ADD)")
 {
 	event
@@ -2518,7 +2372,7 @@ rule("BOT DIES")
 			"Allow for custom revive times"
 			Wait Until(Event Player.reviveTimer != 0, 0.125);
 			If(Event Player.reviveTimer == 0);
-				Event Player.reviveTimer = (Match Time + Global.matchEndTime) / 240;
+				Event Player.reviveTimer = Match Time / 60;
 			End;
 			If(Count Of(Global.spawnTimes) < Global.numberOfBots);
 				Modify Global Variable(spawnTimes, Append To Array, Event Player.reviveTimer);
@@ -5501,7 +5355,7 @@ rule("GENERATE SUPPLY DROPS")
 		While(Global.supplyDropLanding == Null);
 			"Find the closest player to the objective"
 			Global.closestPlayerToObjective = First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-				Current Array Element), First Of(Global.objectivePositions))));
+				Current Array Element), Payload Position)));
 			Global.testPos = Random Value In Array(Filtered Array(Global.mapGrid, Distance Between(Position Of(
 				Global.closestPlayerToObjective), Current Array Element) < 35 && Distance Between(Position Of(Global.closestPlayerToObjective),
 				Current Array Element) > 20));
