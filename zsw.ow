@@ -332,6 +332,7 @@ variables
 		95: blinded
 		96: updateOutlines
 		97: afk
+		98: currentEnhancement
 }
 
 subroutines
@@ -364,7 +365,7 @@ subroutines
 	25: successfulTeleportStatus
 	26: updateBotSpawnPoints
 	27: globalObjectiveEntityManagement
-	28: playerObjectiveEntityManagement
+	28: destroyPlayerEnhancementEntities
 	29: botEntityManagement
 	30: bouncePad
 	31: botTeleportCenter
@@ -384,6 +385,7 @@ subroutines
 	45: selectTarget
 	46: restoreDefaultFacingMovement
 	47: setPrematchTimer
+	48: createEnhancementSelectHud
 }
 
 rule("Fix bot health")
@@ -1549,7 +1551,7 @@ rule("PLAYER MENU CONTROLS (MELEE , ENHANCEMENT SELECTION)")
 
 	conditions
 	{
-		Global.specialGameModeSetup == True;
+		(Global.specialGameModeSetup || Is In Spawn Room(Event Player)) == True;
 		Has Spawned(Event Player) == True;
 		Is Button Held(Event Player, Button(Melee)) == True;
 	}
@@ -2325,7 +2327,7 @@ rule("OBJECTIVE CHANGES AND PLAYER ENTITIES UPDATE")
 
 	actions
 	{
-		Call Subroutine(playerObjectiveEntityManagement);
+		Call Subroutine(destroyPlayerEnhancementEntities);
 	}
 }
 
@@ -2377,35 +2379,6 @@ rule("PLAYER TARGET (REMOVE)")
 		Wait(0.032, Abort When False);
 		Modify Global Variable(playerTargetList, Remove From Array By Value, Event Player);
 		Loop If Condition Is True;
-	}
-}
-
-rule("playerObjectiveEntityMangement")
-{
-	event
-	{
-		Subroutine;
-		playerObjectiveEntityManagement;
-	}
-
-	actions
-	{
-		If(Event Player.objectiveValue != Global.objectiveValue || Count Of(Global.objectivePositions) == 1);
-			Event Player.objectiveValue = First Of(Global.objectiveTypes);
-			"Destroy all current objective effects and texts"
-			For Player Variable(Event Player, entityCount, 0, Count Of(Event Player.generalPlayerBotEntities), 1);
-				Destroy Icon(Event Player.generalPlayerBotEntities[Event Player.entityCount]);
-				Wait(0.016, Ignore Condition);
-			End;
-			Event Player.generalPlayerBotEntities = Empty Array;
-			If(Event Player.objectiveValue == 4);
-				"Player carrying resources icon"
-				Create Icon(Filtered Array(All Players(Team 2), Is Alive(Event Player)
-					&& Current Array Element != Event Player && Event Player.playerObjectiveResourceValue >= Global.amountPerResource),
-					Event Player, Recycle, Visible To and Position, Color(Green), True);
-				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
-			End;
-		End;
 	}
 }
 
@@ -6670,11 +6643,13 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 	{
 		Has Spawned(Event Player) == True;
 		Global.gameStatus == True;
+		((!Is In Spawn Room(Event Player) && Event Player.enhancementValues[0] != Event Player.currentEnhancement)) == True;
 		Is Dummy Bot(Event Player) != True;
 	}
 
 	actions
 	{
+		Call Subroutine(destroyPlayerEnhancementEntities);
 		If(Event Player.enhancementValues[0] == 0);
 			"Default Enhancement: Workshop Setting"
 			Event Player.enhancementValues[0] = Workshop Setting Combo(Custom String("Enhancements"), Custom String("Default Enhancement"), 9,
@@ -6690,6 +6665,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 				Event Player.infectionLvl >= 1 ? Custom String("{0}s", Round To Integer((Event Player.infectionLvl - Round To Integer(
 				Event Player.infectionLvl, Down)) * 20, Up)) : Custom String(""), Left, 99, Color(Green), Color(Green), Color(Green), String,
 				Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			Chase Player Variable At Rate(Event Player, infectionLvl, 0, Event Player.infectionLvl >= 1 ? 0.050 : (
 				Event Player.infectionLvl >= 0 ? 0.033 : 0), Destination and Rate);
 		"Scavenger"
@@ -6697,14 +6673,17 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			"Enhancement: Scavenger"
 			Create HUD Text(Event Player, Custom String("Scavenger {0}", Ability Icon String(Hero Of(Event Player), Button(Primary Fire))),
 				Null, Null, Left, 99, Color(Gray), Color(Gray), Color(Gray), String, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			Event Player.enhancementChase1 = 0;
 			"Ammo visual effect"
 			Create Effect(Filtered Array(Event Player, Event Player.enhancementChase1 != 0), Good Aura, Color(Turquoise),
 				Event Player.enhancementChase1, 0.100, Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Ammo amount"
 			Create In-World Text(Filtered Array(Event Player, Event Player.enhancementChase1 != 0), Custom String("{0} Ammo", Round To Integer(
 				Max Ammo(Event Player, Is In Alternate Form(Event Player) && Max Ammo(Event Player, 1) > 0 ? 1 : 0) / 3, Up)),
 				Event Player.enhancementChase1, 1, Clip Against Surfaces, Visible To Position and String, Color(White), Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 		"Laser Barricade"
 		Else If(Event Player.enhancementValues[0] == 3);
 			"Enhancement: Laser Barricade"
@@ -6714,6 +6693,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 				: Custom String(""), Event Player.enhancementValues[3] <= 0 ? Custom String("Hold [{0}] to place a barricade",
 				Input Binding String(Button(Melee))) : Custom String(""), Left, 99, Event Player.enhancementValues[3] > 0 ? Color(Red) : Color(
 				Blue), Color(Blue), Color(Blue), Visible To String and Color, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Barricade placement visual"
 			Create Beam Effect(Filtered Array(Event Player, Is Button Held(Event Player, Button(Melee))
 				&& Event Player.enhancementValues[3] <= 0 && Distance Between(Eye Position(Event Player), Ray Cast Hit Position(Eye Position(
@@ -6723,26 +6703,32 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 				False), World Vector Of(Vector(0.500 * Event Player.enhancementValues[2], 0.100, 0), Event Player, Rotation)
 				+ Ray Cast Hit Position(Eye Position(Event Player), Eye Position(Event Player) + Facing Direction Of(Event Player) * 30, Null,
 				All Players(All Teams), False), Color(Green), Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Barricade bottom"
 			Create Beam Effect(Filtered Array(All Players(All Teams), Event Player.enhancementValues[4] != Null), Bad Beam,
 				Event Player.enhancementValues[5], Event Player.enhancementValues[6], Color(Blue), Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Barricade side 1"
 			Create Beam Effect(Filtered Array(All Players(All Teams), Event Player.enhancementChase1 > 0), Bad Beam,
 				Event Player.enhancementValues[5] + Vector(0, Event Player.enhancementValues[1], 0), Event Player.enhancementValues[5], Color(
 				Blue), Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Barricade side 2"
 			Create Beam Effect(Filtered Array(All Players(All Teams), Event Player.enhancementChase1 > 0), Bad Beam,
 				Event Player.enhancementValues[6], Event Player.enhancementValues[6] + Vector(0, Event Player.enhancementValues[1], 0), Color(
 				Blue), Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Barricade top"
 			Create Beam Effect(Filtered Array(All Players(All Teams), Event Player.enhancementChase1 > 0), Bad Beam,
 				Event Player.enhancementValues[6] + Vector(0, Event Player.enhancementValues[1], 0),
 				Event Player.enhancementValues[5] + Vector(0, Event Player.enhancementValues[1], 0), Color(Blue),
 				Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Barricade health"
 			Create In-World Text(Event Player.enhancementChase1 > 0 ? All Players(All Teams) : Null, Custom String("{0}HP", Round To Integer(
 				Event Player.enhancementChase1, Up)), Event Player.enhancementValues[4] + Vector(0, 1, 0), 1.500, Clip Against Surfaces,
 				Visible To Position and String, Color(Blue), Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Barrier height"
 			Event Player.enhancementValues[1] = 2;
 			"Barrier width"
@@ -6752,12 +6738,14 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			"Enhancement: Brain Killer"
 			Create HUD Text(Event Player, Custom String("Brain Killer {0}", Icon String(Skull)), Null, Null, Left, 99, Color(Red), Color(Red),
 				Color(Red), String, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 		"Pyrotechnic"
 		Else If(Event Player.enhancementValues[0] == 5);
 			"Enhancement: Pyrotechnic"
 			Create HUD Text(Event Player, Custom String("Pyrotechnic {0}", Icon String(Fire)), Null, Null, Left, 99,
 				Event Player.enhancementValues[1] ? Color(Orange) : Color(Red), Color(Orange), Color(Orange), String and Color,
 				Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Pyro Active"
 			Event Player.enhancementValues[1] = True;
 			"Special enhancement color"
@@ -6771,6 +6759,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			Create HUD Text(Event Player, Custom String("Plague Doctor {0}", Icon String(Plus)), Null, Custom String(
 				"Infection Reduced: {0} lvls", Event Player.enhancementValues[1]), Left, 99, Color(Green), Color(Green), Color(Green), String,
 				Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Plague doctor does 100 + x% more healing to infected players"
 			Start Healing Modification(Filtered Array(All Players(Team 2), Current Array Element.infected), Event Player, 150,
 				Receivers and Healers);
@@ -6781,14 +6770,17 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			Create HUD Text(Event Player, Custom String("Born to Battle {0}", Icon String(Bolt)), Null,
 				Event Player.enhancementValues[1] ? Icon String(Checkmark) : Custom String(""), Left, 99, Color(Gray), Color(Gray), Color(
 				Gray), String, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			Event Player.enhancementValues[1] = False;
 		"Kevlar"
 		Else If(Event Player.enhancementValues[0] == 8);
 			"Enhancement Selection: Kevlar"
 			Create HUD Text(Event Player, Custom String("Kevlar {0}", Icon String(Stop)), Null, Null, Left, 99, Custom Color(240, 129, 26,
 				255), Color(Sky Blue), Color(Sky Blue), String, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			Wait Until(Event Player.initialMaxHealth != 0, 99999);
 			Add Health Pool To Player(Event Player, Armor, 75, True, False);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Health Pool);
 			Event Player.enhancementValues[1] = Last Created Health Pool;
 		"Nano Nurse"
 		Else If(Event Player.enhancementValues[0] == 9);
@@ -6796,10 +6788,12 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			Create HUD Text(Event Player, Custom String("Nano Nurse {0}", Icon String(Plus)), Null, Normalized Health(Event Player)
 				< 1 && Event Player.enhancementValues[2] ? Custom String("Regenerating Health") : Custom String(""), Left, 99, Color(Yellow),
 				Color(Yellow), Color(Yellow), String, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Healing effect"
 			Create Effect(Filtered Array(Event Player, Normalized Health(Event Player) < 1 && Event Player.enhancementValues[2]), Sparkles,
 				Color(Yellow), Event Player, Evaluate Once(Distance Between(Position Of(Event Player), Eye Position(Event Player)) * 0.950)
 				* Event Player.size, Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			Event Player.enhancementValues[1] = 0;
 			Event Player.enhancementValues[2] = False;
 		"Hitchhiker"
@@ -6811,6 +6805,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 				Event Player), Position Of(Current Array Element)) < 2 * Current Array Element.size) ? Custom String("Press [{0}] to attach",
 				Input Binding String(Button(Crouch))) : Custom String("")), Left, 99, Color(Purple), Color(Purple),
 				Event Player.attached ? Color(Red) : Color(Purple), Visible To String and Color, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			Event Player.enhancementValues[1] = 0;
 			Event Player.enhancementValues[2] = 0;
 			Start Assist(Event Player.enhancementValues[1], Event Player, Assisters and Targets);
@@ -6820,6 +6815,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			Create HUD Text(Event Player, Custom String("P.U.P. {0}", Icon String(Happy)), Null, Null, Left, 99,
 				Event Player.enhancementValues[1] == Color(Sky Blue) && Event Player.enhancementChase2 > 0 ? Color(Blue)
 				: Event Player.enhancementValues[1], Color(Blue), Color(Blue), Visible To String and Color, Default Visibility);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Text Id);
 			"Postion of P.U.P."
 			Event Player.enhancementChase1 = Position Of(Event Player) + Vector(0, 200, 0);
 			"P.U.P. Default movment"
@@ -6832,16 +6828,20 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			"P.U.P. visual"
 			Create Effect(All Players(All Teams), Sphere, Event Player.enhancementValues[1], Event Player.enhancementChase1, 0.250,
 				Visible To Position Radius and Color);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"P.U.P. Beam"
 			Create Beam Effect(Filtered Array(All Players(All Teams),
 				Event Player.enhancementValues[2] && Event Player.enhancementValues[3] != Null), Good Beam, Event Player.enhancementChase1,
 				Event Player.enhancementValues[3], Event Player.enhancementValues[1], Visible To Position Radius and Color);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"P.U.P using beam sound"
 			Create Effect(Filtered Array(All Players(All Teams), Event Player.enhancementValues[2]), Beacon Sound, Color(Sky Blue),
 				Event Player.enhancementChase1, 200, Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Freeze aura"
 			Create Effect(Filtered Array(All Players(All Teams), Event Player.enhancementValues[4]), Bad Aura, Color(Sky Blue),
 				Event Player.enhancementValues[3], Event Player.enhancementValues[3].size, Visible To Position and Radius);
+			Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			"Default color"
 			Event Player.enhancementValues[1] = Color(Sky Blue);
 			"Beam visibility"
@@ -6850,6 +6850,37 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 			Event Player.enhancementValues[3] = Null;
 			"Freeze aura visibility"
 			Event Player.enhancementValues[4] = False;
+	}
+}
+
+rule("playerObjectiveEntityMangement")
+{
+	event
+	{
+		Subroutine;
+		destroyPlayerEnhancementEntities;
+	}
+
+	actions
+	{
+		Event Player.currentEnhancement = Event Player.enhancementValues[0];
+		"Destroy all current objective effects and texts"
+		For Player Variable(Event Player, entityCount, 0, Count Of(Event Player.generalPlayerBotEntities), 1);
+			Destroy HUD Text(Event Player.generalPlayerBotEntities[Event Player.entityCount]);
+			Destroy Effect(Event Player.generalPlayerBotEntities[Event Player.entityCount]);
+			Destroy In-World Text(Event Player.generalPlayerBotEntities[Event Player.entityCount]);
+			Remove Health Pool From Player(Event Player.generalPlayerBotEntities[Event Player.entityCount]);
+			Wait(0.016, Ignore Condition);
+		End;
+		Event Player.generalPlayerBotEntities = Empty Array;
+		Stop Chasing Player Variable(Event Player, enhancementChase1);
+		Stop Chasing Player Variable(Event Player, enhancementChase2);
+		Event Player.enhancementChase1 = Null;
+		Event Player.enhancementChase2 = Null;
+		Stop Chasing Player Variable(Event Player, infectionLvl);
+		For Player Variable(Event Player, entityCount, 1, Count Of(Event Player.enhancementValues), 1);
+			Event Player.enhancementValues[Event Player.entityCount] = Null;
+		End;
 	}
 }
 
@@ -6884,30 +6915,32 @@ rule("scavengerManagement")
 
 	actions
 	{
-		While(Event Player.enhancementValues[1] != Null);
+		While(Event Player.enhancementValues[1] != Null && Event Player.enhancementValues[0] == 2);
 			Event Player.enhancementChase1 = Event Player.enhancementValues[1];
 			Chase Player Variable At Rate(Event Player, enhancementChase1, Eye Position(Event Player) + Vector(0, -0.500, 0),
 				Event Player.enhancementChase1 != 0 ? 20 : 0, Destination and Rate);
-			Wait Until(Distance Between(Event Player.enhancementChase1, Eye Position(Event Player) + Vector(0, -0.500, 0)) < 0.100, 99999);
-			Stop Chasing Player Variable(Event Player, enhancementChase1);
-			Event Player.enhancementChase1 = 0;
-			Play Effect(Event Player, Buff Explosion Sound, Color(White), Event Player, 50);
-			"Prevent ammo collection during reload animation"
-			If(Is Reloading(Event Player));
-				Wait Until(!Is Reloading(Event Player), 3);
-				Set Ammo(Event Player, 0, Ammo(Event Player, 0) + Round To Integer(Max Ammo(Event Player, 0) / 3, Up));
-				Set Ammo(Event Player, 1, Ammo(Event Player, 1) + Round To Integer(Max Ammo(Event Player, 1) / 3, Up));
-			Else;
-				If(Ammo(Event Player, 0) < Max Ammo(Event Player, 0));
-					Set Ammo(Event Player, 0, Min(Ammo(Event Player, 0) + Round To Integer(Max Ammo(Event Player, 0) / 3, Up), Max Ammo(Event Player,
-						0)));
+			Wait Until(Distance Between(Event Player.enhancementChase1, Eye Position(Event Player) + Vector(0, -0.500, 0)) < 0.100 || Event Player.enhancementValues[0] != 2, 99999);
+			If(Event Player.enhancementValues[0] == 2);
+				Stop Chasing Player Variable(Event Player, enhancementChase1);
+				Event Player.enhancementChase1 = 0;
+				Play Effect(Event Player, Buff Explosion Sound, Color(White), Event Player, 50);
+				"Prevent ammo collection during reload animation"
+				If(Is Reloading(Event Player));
+					Wait Until(!Is Reloading(Event Player), 3);
+					Set Ammo(Event Player, 0, Ammo(Event Player, 0) + Round To Integer(Max Ammo(Event Player, 0) / 3, Up));
+					Set Ammo(Event Player, 1, Ammo(Event Player, 1) + Round To Integer(Max Ammo(Event Player, 1) / 3, Up));
+				Else;
+					If(Ammo(Event Player, 0) < Max Ammo(Event Player, 0));
+						Set Ammo(Event Player, 0, Min(Ammo(Event Player, 0) + Round To Integer(Max Ammo(Event Player, 0) / 3, Up), Max Ammo(Event Player,
+							0)));
+					End;
+					If(Ammo(Event Player, 1) < Max Ammo(Event Player, 1));
+						Set Ammo(Event Player, 1, Min(Ammo(Event Player, 1) + Round To Integer(Max Ammo(Event Player, 1) / 3, Up), Max Ammo(Event Player,
+							1)));
+					End;
 				End;
-				If(Ammo(Event Player, 1) < Max Ammo(Event Player, 1));
-					Set Ammo(Event Player, 1, Min(Ammo(Event Player, 1) + Round To Integer(Max Ammo(Event Player, 1) / 3, Up), Max Ammo(Event Player,
-						1)));
-				End;
+				Modify Player Variable(Event Player, enhancementValues, Remove From Array By Index, 1);
 			End;
-			Modify Player Variable(Event Player, enhancementValues, Remove From Array By Index, 1);
 		End;
 	}
 }
