@@ -1890,19 +1890,14 @@ rule("PLAYER GET DOWNED")
 {
 	event
 	{
-		Player Dies;
+		Player Died;
 		Team 2;
 		All;
 	}
 
-	conditions
-	{
-		Event Was Health Pack == True;
-	}
-
 	actions
 	{
-		Event Plyaer.blinded = False; 
+		Event Player.blinded = False; 
 		Event Player.infected = False;
 		Event Player.infectionLvl = 0;
 	}
