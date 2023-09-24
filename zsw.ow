@@ -23,7 +23,7 @@ settings
 		disabled Assault
 		{
 			Allow Hero Switching: On
-			Capture Speed Modifier: 100%
+			Capture Speed Modifier: 40%
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
@@ -46,10 +46,10 @@ settings
 		disabled Control
 		{
 			Allow Hero Switching: On
-			Capture Speed Modifier: 100%
+			Capture Speed Modifier: 40%
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Scoring Speed Modifier: 100%
+			Scoring Speed Modifier: 40%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
@@ -58,26 +58,26 @@ settings
 			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Payload Speed Modifier: 100%
+			Payload Speed Modifier: 40%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		disabled Flashpoint
 		{
-			Capture Speed Modifier: 100%
+			Capture Speed Modifier: 40%
 			First Active Control Point: A
 			Score To Win: 3
-			Scoring Speed Modifier: 100%
+			Scoring Speed Modifier: 40%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		Hybrid
 		{
 			Allow Hero Switching: On
-			Capture Speed Modifier: 100%
+			Capture Speed Modifier: 40%
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Payload Speed Modifier: 100%
+			Payload Speed Modifier: 40%
 			Tank Role Passive Health Bonus: Always Enabled
 
 			disabled maps
@@ -92,8 +92,8 @@ settings
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
-			TS-1 Push Speed Modifier: 100%
-			TS-1 Walk Speed Modifier: 100%
+			TS-1 Push Speed Modifier: 40%
+			TS-1 Walk Speed Modifier: 40%
 		}
 
 		disabled Team Deathmatch
@@ -939,7 +939,7 @@ rule("setDifficulty")
 	{
 		"Difficulty: Beginner"
 		If(Global.difficultySetting == 1);
-			Global.startTime = 240;
+			Global.startTime = 600;
 			"Bot Health Values"
 			Global.botHealthValues = Array(213, 130, 75, 750, 1250, 100, 110, 500, 125, 450, 100, 400, 200, 250, 100);
 			"Bot bite damage"
@@ -953,7 +953,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(8.500, 60, 1, 1, 50, 75, 1, 25, 1, 50, 1, 50, 75, 50, 5);
 		"Difficulty: Normal"
 		Else If(Global.difficultySetting == 2);
-			Global.startTime = 240;
+			Global.startTime = 600;
 			"Bot Health Values"
 			Global.botHealthValues = Array(225, 170, 125, 900, 2000, 140, 140, 700, 160, 650, 135, 600, 275, 400, 150);
 			"Bot bite damage"
@@ -966,7 +966,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(8.500, 60, 1, 1, 50, 75, 1, 25, 1, 50, 1, 50, 75, 50, 5);
 		"Difficulty: Expert"
 		Else If(Global.difficultySetting == 3);
-			Global.startTime = 150;
+			Global.startTime = 450;
 			"Bot Health Values"
 			Global.botHealthValues = Array(225, 170, 125, 900, 2000, 140, 140, 700, 160, 650, 135, 600, 275, 400, 150);
 			"Bot bite damage"
@@ -979,7 +979,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(125, 125, 50, 50, 150, 175, 50, 150, 50, 150, 1, 90, 75, 100, 75);
 		"Difficulty: Legendary"
 		Else If(Global.difficultySetting == 4);
-			Global.startTime = 150;
+			Global.startTime = 450;
 			"Bot Health Values"
 			Global.botHealthValues = Array(300, 200, 125, 900, 2000, 160, 150, 800, 200, 750, 175, 600, 300, 400, 200);
 			"Bot bite damage"
@@ -992,7 +992,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(150, 150, 100, 100, 200, 225, 100, 200, 100, 175, 50, 175, 100, 150, 150);
 		"Difficulty: Insanity"
 		Else If(Global.difficultySetting == 5);
-			Global.startTime = 90;
+			Global.startTime = 300;
 			"Bot Health Values"
 			Global.botHealthValues = Array(300, 250, 200, 1200, 2500, 200, 250, 1000, 250, 900, 200, 800, 350, 600, 275);
 			"Bot bite damage"
@@ -1723,7 +1723,7 @@ rule("OBJECTIVE CAPTURED")
 	{
 		Global.currentObjectiveIndex = Objective Index;
 		Global.objectiveCaptureValue = Distance Between(Objective Position(Objective Index - 1), Objective Position(Objective Index));
-		Set Match Time(Match Time - (60 * 2));
+		disabled Set Match Time(Match Time - (60 * 2));
 	}
 }
 
