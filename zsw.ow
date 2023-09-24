@@ -22,8 +22,8 @@ settings
 	{
 		disabled Assault
 		{
-			Allow Hero Switching: Off
-			Capture Speed Modifier: 10%
+			Allow Hero Switching: On
+			Capture Speed Modifier: 100%
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
@@ -31,7 +31,7 @@ settings
 
 		disabled Capture the Flag
 		{
-			Allow Hero Switching: Off
+			Allow Hero Switching: On
 			Damage Interrupts Flag Interaction: On
 			Flag Carrier Abilities: All
 			Flag Dropped Lock Time: 10.0
@@ -45,39 +45,39 @@ settings
 
 		disabled Control
 		{
-			Allow Hero Switching: Off
-			Capture Speed Modifier: 10%
+			Allow Hero Switching: On
+			Capture Speed Modifier: 100%
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Scoring Speed Modifier: 10%
+			Scoring Speed Modifier: 100%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		Escort
 		{
-			Allow Hero Switching: Off
+			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Payload Speed Modifier: 10%
+			Payload Speed Modifier: 100%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
-		Flashpoint
+		disabled Flashpoint
 		{
-			Capture Speed Modifier: 10%
+			Capture Speed Modifier: 100%
 			First Active Control Point: A
-			Score To Win: 10
-			Scoring Speed Modifier: 10%
+			Score To Win: 3
+			Scoring Speed Modifier: 100%
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		Hybrid
 		{
-			Allow Hero Switching: Off
-			Capture Speed Modifier: 10%
+			Allow Hero Switching: On
+			Capture Speed Modifier: 100%
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Payload Speed Modifier: 10%
+			Payload Speed Modifier: 100%
 			Tank Role Passive Health Bonus: Always Enabled
 
 			disabled maps
@@ -86,19 +86,19 @@ settings
 			}
 		}
 
-		Push
+		disabled Push
 		{
-			Allow Hero Switching: Off
+			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
-			TS-1 Push Speed Modifier: 10%
-			TS-1 Walk Speed Modifier: 10%
+			TS-1 Push Speed Modifier: 100%
+			TS-1 Walk Speed Modifier: 100%
 		}
 
 		disabled Team Deathmatch
 		{
-			Allow Hero Switching: Off
+			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Tank Role Passive Health Bonus: Always Enabled
@@ -484,7 +484,6 @@ rule("SPAWN BOTS")
 		Global.gameStatus == True;
 		Server Load Average <= Workshop Setting Integer(Custom String("General"), Custom String(
 			"Spawn Zombies When Server Load Average is Less Than"), 180, 100, 255, 2);
-		disabled Number Of Players(Team 1) < Global.numberOfBots;
 		Number Of Players(All Teams) < 24;
 		((Count Of(Global.spawnTimes) > 0 && First Of(Global.spawnTimes) <= 0) || (Count Of(Global.spawnTimes) + Number Of Players(Team 1)
 			< Global.numberOfBots)) == True;
@@ -497,7 +496,7 @@ rule("SPAWN BOTS")
 			Modify Global Variable(spawnTimes, Remove From Array By Index, 0);
 			Wait(0.250, Ignore Condition);
 		Else;
-			Wait(3, Ignore Condition);
+			Wait(1, Ignore Condition);
 		End;
 		Loop If Condition Is True;
 		Wait(Last Of(Sorted Array(Global.spawnTimes, Current Array Element)), Restart When True);
@@ -578,9 +577,6 @@ rule("START GAME IF WAITING FOR PLAYERS")
 
 	actions
 	{
-		Disable Built-In Game Mode Completion;
-		Disable Built-In Game Mode Scoring;
-		Disable Built-In Game Mode Announcer;
 		Start Game Mode;
 		Small Message(Host Player, Custom String("Starting"));
 		Wait(1, Ignore Condition);
@@ -636,8 +632,6 @@ rule("SKIP ASSEMBLING HEROES")
 		Wait(0.016, Ignore Condition);
 		Global.chase1 = Match Time;
 		Chase Global Variable At Rate(chase1, 0, 1, None);
-		Disable Built-In Game Mode Announcer;
-		Disable Built-In Game Mode Completion;
 	}
 }
 
@@ -702,7 +696,7 @@ rule("VARIABLE ASSIGNMENT")
 		Global.mustReviveTime = 60;
 		Global.playersOnObjective = Empty Array;
 		Global.losList = Empty Array;
-		Global.botMaxTeleportRange = Array(20, 40);
+		Global.botMaxTeleportRange = Array(20, 30);
 		Global.supplyDropStatus = True;
 		Global.supplyDropLanding = Null;
 		Global.supplyDropPosition = Null;
@@ -745,8 +739,6 @@ rule("START GAME")
 		Global.walkCenter = Nearest Walkable Position(Global.walkCenter);
 		Global.specialGameModeSetup = False;
 		Enable Built-In Game Mode Music;
-		Disable Built-In Game Mode Scoring;
-		Disable Built-In Game Mode Announcer;
 		Disable Inspector Recording;
 		disabled Enable Inspector Recording;
 		Destroy All Dummy Bots;
@@ -757,10 +749,6 @@ rule("START GAME")
 		Wait(0.250, Ignore Condition);
 		Set Match Time(Global.startTime + Global.matchEndTime);
 		Unpause Match Time;
-		"Disabled survivor spawn room healing zone"
-		Start Forcing Spawn Room(Team 2, Color(Blue));
-		"Objective Description"
-		Set Objective Description(All Players(All Teams), Global.objectiveDescription, Visible To and String);
 	}
 }
 
@@ -947,7 +935,7 @@ rule("setDifficulty")
 	{
 		"Difficulty: Beginner"
 		If(Global.difficultySetting == 1);
-			Global.startTime = 600;
+			Global.startTime = 240;
 			"Bot Health Values"
 			Global.botHealthValues = Array(213, 130, 75, 750, 1250, 100, 110, 500, 125, 450, 100, 400, 200, 250, 100);
 			"Bot bite damage"
@@ -961,7 +949,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(8.500, 60, 1, 1, 50, 75, 1, 25, 1, 50, 1, 50, 75, 50, 5);
 		"Difficulty: Normal"
 		Else If(Global.difficultySetting == 2);
-			Global.startTime = 600;
+			Global.startTime = 240;
 			"Bot Health Values"
 			Global.botHealthValues = Array(225, 170, 125, 900, 2000, 140, 140, 700, 160, 650, 135, 600, 275, 400, 150);
 			"Bot bite damage"
@@ -974,7 +962,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(8.500, 60, 1, 1, 50, 75, 1, 25, 1, 50, 1, 50, 75, 50, 5);
 		"Difficulty: Expert"
 		Else If(Global.difficultySetting == 3);
-			Global.startTime = 450;
+			Global.startTime = 150;
 			"Bot Health Values"
 			Global.botHealthValues = Array(225, 170, 125, 900, 2000, 140, 140, 700, 160, 650, 135, 600, 275, 400, 150);
 			"Bot bite damage"
@@ -987,7 +975,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(125, 125, 50, 50, 150, 175, 50, 150, 50, 150, 1, 90, 75, 100, 75);
 		"Difficulty: Legendary"
 		Else If(Global.difficultySetting == 4);
-			Global.startTime = 450;
+			Global.startTime = 150;
 			"Bot Health Values"
 			Global.botHealthValues = Array(300, 200, 125, 900, 2000, 160, 150, 800, 200, 750, 175, 600, 300, 400, 200);
 			"Bot bite damage"
@@ -1000,7 +988,7 @@ rule("setDifficulty")
 			Global.damageDealt = Array(150, 150, 100, 100, 200, 225, 100, 200, 100, 175, 50, 175, 100, 150, 150);
 		"Difficulty: Insanity"
 		Else If(Global.difficultySetting == 5);
-			Global.startTime = 300;
+			Global.startTime = 90;
 			"Bot Health Values"
 			Global.botHealthValues = Array(300, 250, 200, 1200, 2500, 200, 250, 1000, 250, 900, 200, 800, 350, 600, 275);
 			"Bot bite damage"
@@ -1069,8 +1057,6 @@ rule("GLOBAL MENU INITIALIZATION")
 	actions
 	{
 		Wait(0.016, Abort When False);
-		Set Objective Description(All Players(All Teams), Global.voting ? Custom String("Voting ends in {0}s", Round To Integer(
-			Match Time - Global.votingEndTime, Up)) : Custom String("Select your hero"), Visible To and String);
 	}
 }
 
@@ -1097,7 +1083,7 @@ rule("EFFECTS/TEXTS")
 			Color(White), Color(Purple), Visible To and String, Visible Always);
 		"Workshop.codes/Github Promo"
 		Create HUD Text(All Players(All Teams), Null, Null, Round To Integer(Total Time Elapsed * 0.200, Up) % 2 == 0 ? Custom String(
-			"Workshop.codes/MEBGG") : Custom String("github.com/Mazattack1999/zsm-ow"), Right, 2, Color(White), Color(White),
+			"Workshop.codes/MEBGG") : Custom String("github.com/Mazattack1999/zsw-ow"), Right, 2, Color(White), Color(White),
 			Round To Integer(Total Time Elapsed * 0.200, Up) % 2 == 0 ? Color(Orange) : Color(Green), Visible To String and Color,
 			Visible Always);
 		"Workshop.codes/Discord Promo"
@@ -1679,12 +1665,6 @@ rule("EFFECTS/TEXTS")
 	actions
 	{
 		Wait(1, Ignore Condition);
-		"Objective description and match timer"
-		Create HUD Text(All Players(All Teams), Null, Null, Custom String("{0}{1}", Global.objectiveDescription,
-			Match Time > 0 + Global.matchEndTime ? Custom String(" | {0}", Match Time <= 60 ? Custom String("{0}s", Match Time)
-			: Custom String("{0}:{2}{1}", Round To Integer(Match Time / 60, Down), Round To Integer(Match Time % 60, Down),
-			Round To Integer(Match Time % 60, Down) < 10 ? 0 : Custom String(""))) : Custom String("")), Top, -1, Color(Gray), Color(Gray),
-			Custom Color(215, 215, 215, 255), Visible To and String, Default Visibility);
 		"Infected Hud"
 		Create HUD Text(Filtered Array(All Players(All Teams), (Count Of(Global.healthpackPositions) == 0 || Health(Current Array Element)
 			< Round To Integer(Current Array Element.infectionLvl, Down) ^ 4 / 16 * 20)
@@ -1764,40 +1744,7 @@ rule("PLAYER EXTRACTION CONTROL")
 	}
 }
 
-rule("ATTACK SPAWN ROOM CONTROL")
-{
-	event
-	{
-		Ongoing - Global;
-	}
-
-	conditions
-	{
-		Global.specialGameModeSetup != True;
-		"Does not apply if game mode is special mode"
-		Global.specialGameMode != True;
-		Is True For Any(Global.playerTargetList, Distance Between(Position Of(Current Array Element), Global.activeAttackSpawnRoom) < 45)
-			== True;
-	}
-
-	actions
-	{
-		Global.spawnRoomIndex += 1;
-		If(Global.spawnRoomIndex >= Count Of(Global.attackSpawnRooms));
-			Global.spawnRoomIndex = 0;
-		End;
-		"Make sure players are clear of test spawn room before activating"
-		If(Is True For All(Filtered Array(All Players(Team 2), Has Spawned(Current Array Element)), Distance Between(Position Of(
-			Current Array Element), Global.attackSpawnRooms[Global.spawnRoomIndex]) > 45));
-			Global.activeAttackSpawnRoom = Global.attackSpawnRooms[Global.spawnRoomIndex];
-			Start Forcing Spawn Room(Team 1, Global.spawnRoomIndex);
-		End;
-		Wait(1, Ignore Condition);
-		Loop If Condition Is True;
-	}
-}
-
-rule("PREVENT MATCH TIME FROM UNPAUSING")
+disabled rule("PREVENT MATCH TIME FROM UNPAUSING")
 {
 	event
 	{
@@ -1819,7 +1766,7 @@ rule("PREVENT MATCH TIME FROM UNPAUSING")
 	}
 }
 
-rule("TRIGGER OVERTIME MUSIC")
+disabled rule("TRIGGER OVERTIME MUSIC")
 {
 	event
 	{
@@ -1982,78 +1929,6 @@ rule("EXTRACTION ZONE INFECTION INCREASE")
 	}
 }
 
-disabled rule("WIN/LOSS CONDITIONS")
-{
-	event
-	{
-		Ongoing - Global;
-	}
-
-	conditions
-	{
-		Global.objectiveComplete == False;
-		Global.gameStatus == True;
-		((Count Of(Global.objectivePositions) == 1 && Count Of(Global.playersOnObjective) == Count Of(Filtered Array(All Players(Team 2),
-			Has Spawned(Current Array Element) && Current Array Element.deathTimer > 0 && !Current Array Element.afk))) || (Count Of(
-			Global.playerTargetList) == 0)) == True;
-	}
-
-	actions
-	{
-		Wait(0.250, Abort When False);
-		Global.gameStatus = False;
-		Enable Built-In Game Mode Announcer;
-		Disable Nameplates(All Players(All Teams), All Players(All Teams));
-		Disable Game Mode HUD(All Players(All Teams));
-		Disable Kill Feed(All Players(All Teams));
-		Disable Hero HUD(All Players(All Teams));
-		Start Forcing Player Outlines(All Players(All Teams), All Players(All Teams), False, Color(White), Default);
-		Destroy All Effects;
-		Destroy All Icons;
-		Destroy All In-World Text;
-		Destroy All Progress Bar HUD Text;
-		Destroy All Progress Bar In-World Text;
-		Destroy All HUD Text;
-		Set Status(All Players(Team 2), Null, Rooted, 9999);
-		Set Status(All Players(Team 2), Null, Phased Out, 9999);
-		If(Count Of(Global.playerTargetList) == 0);
-			Teleport(All Players(Team 2), Vector(0, 500, 0));
-			Set Invisible(All Players(All Teams), All);
-			Wait(1, Ignore Condition);
-			Resurrect(All Players(Team 2));
-			Start Camera(All Players(Team 2), Global.walkCenter + Direction From Angles(Horizontal Facing Angle Of(Local Player)
-				* -2 + Total Time Elapsed * -7.500, -30) * 200, Global.walkCenter, 10);
-			Start Rule(nukeMap, Do Nothing);
-			Wait(8, Ignore Condition);
-			Declare Team Victory(Team 1);
-			Set Team Score(Team 1, 9);
-			Declare Round Victory(Team 1);
-		Else;
-			Resurrect(Filtered Array(All Players(Team 2), Has Spawned(Current Array Element) && Distance Between(First Of(
-				Global.objectivePositions), Vector(X Component Of(Position Of(Current Array Element)), Y Component Of(First Of(
-				Global.objectivePositions)), Z Component Of(Position Of(Current Array Element)))) < Global.objectiveRad));
-			Wait(0.016, Ignore Condition);
-			Global.evacDestination = First Of(Global.objectivePositions) + Vector(0, 250, 0) + Direction From Angles(Random Real(0, 360), 0)
-				* 500;
-			Global.evacRate = 2;
-			Global.evacuatingSurvivorList = Global.playersOnObjective;
-			Wait(1, Ignore Condition);
-			Global.evacRate = 10;
-			Wait(5, Ignore Condition);
-			Global.evacRate = 2;
-			Wait(2, Ignore Condition);
-			Start Rule(nukeMap, Do Nothing);
-			Global.evacRate = 50;
-			Wait(8, Ignore Condition);
-			Declare Team Victory(Team 2);
-			Set Team Score(Team 2, 9);
-			Declare Round Victory(Team 2);
-		End;
-		Enable Hero HUD(All Players(All Teams));
-		Enable Game Mode HUD(All Players(All Teams));
-	}
-}
-
 disabled rule("============================================== PLAYERS GAME IN PROGRESS ====================================================")
 {
 	event
@@ -2086,14 +1961,11 @@ rule("PLAYER INITIALIZATION")
 		Event Player.attached = False;
 		Event Player.blinded = False;
 		Event Player.afk = False;
-		Disable Messages(Event Player);
-		Disable Game Mode In-World UI(Event Player);
-		Disable Game Mode HUD(Event Player);
 		Wait(0.250, Abort When False);
+		Enable Game Mode In-World UI(Event Player);
+		Enable Game Mode HUD(Event Player);
 		Event Player.invisible = False;
 		Event Player.reviving = False;
-		Disable Built-In Game Mode Respawning(Event Player);
-		Wait(0.016, Ignore Condition);
 		Event Player.infected = False;
 		Enable Death Spectate Target HUD(Event Player);
 		Event Player.reviveStartTime = 5;
@@ -2104,7 +1976,7 @@ rule("PLAYER INITIALIZATION")
 		Call Subroutine(enableDisableAbilities);
 		Event Player.size = 1;
 		"Player joins midgame"
-		If(First Of(Event Player.playerMenuStatus) == 0);
+		If(First Of(Event Player.playerMenuStatus) == 0 && False);
 			"Player joins game fo the first time"
 			If(!Array Contains(Global.users, Custom String("{0}", Event Player)));
 				Call Subroutine(updateUsers);
@@ -2150,22 +2022,9 @@ rule("PLAYER INITIALIZATION")
 			End;
 		"Player joined on start screen"
 		Else;
-			Wait Until(Count Of(Global.objectivePositions) >= 1, 5);
-			If(Global.specialGameMode);
-				Wait(0.016, Ignore Condition);
-				Teleport(Event Player, Random Value In Array(Filtered Array(Global.mapGrid, Distance Between(Current Array Element,
-					Global.walkCenter) < 15)));
-				Wait(0.016, Ignore Condition);
-			End;
-			Set Facing(Event Player, Direction Towards(Eye Position(Event Player), First Of(Global.objectivePositions)), To World);
 			Event Player.playerActiveStatus = True;
-			Cancel Primary Action(Event Player);
-			Clear Status(Event Player, Invincible);
 			Call Subroutine(updateUsers);
 		End;
-		Stop Camera(Event Player);
-		Clear Status(Event Player, Rooted);
-		Set Invisible(Event Player, None);
 	}
 }
 
@@ -2193,19 +2052,11 @@ rule("EFFECTS/TEXTS")
 		"Infected aura"
 		Create Effect(Filtered Array(All Players(All Teams), Event Player.infected), Bad Aura, Color(Lime Green), Event Player,
 			Local Player == Event Player ? 0.100 : 0.500, Visible To Position and Radius);
-		"Need revive text"
-		Create In-World Text(Filtered Array(All Players(All Teams), Is Dead(Event Player) && Event Player.deathTimer > 0),
-			Event Player.reviving ? Custom String("Reviving: {0}s", Round To Integer(Event Player.reviveTimer, Up)) : Custom String(
-			"Revive: {0}s", Round To Integer(Event Player.deathTimer, Up)), Position Of(Event Player) + Vector(0, 1.500, 0), 1.500,
-			Do Not Clip, Visible To Position String and Color, Event Player.reviving ? Color(Yellow) : Color(Red), Default Visibility);
-		"Reviving ring"
-		Create Effect(Filtered Array(All Players(All Teams), Event Player.reviving), Ring, Color(Yellow), Position Of(Event Player),
-			Global.reviveRadius, Visible To Position and Radius);
 		"Health Hud text"
 		Create HUD Text(Filtered Array(All Players(All Teams), Event Player.deathTimer > 0 && !Event Player.afk), Custom String(
 			"{0}{1}: {2}", Event Player, Hero Icon String(Hero Of(Event Player)), Is Alive(Event Player) ? Custom String("{0}%",
 			Round To Integer(Normalized Health(Event Player) * 100, Up)) : Custom String("DOWN")), Is Dead(Event Player)
-			&& !Event Player.reviving ? Custom String("Revive: {0}s", Round To Integer(Event Player.deathTimer, Up)) : Custom String(""),
+			&& !Event Player.reviving ? Custom String("", Round To Integer(Event Player.deathTimer, Up)) : Custom String(""),
 			Event Player.infectionLvl >= 1 ? Custom String("Infection Level: {0}", Round To Integer(Event Player.infectionLvl, Down)) : (
 			Event Player.infectionLvl < 0 ? Custom String("Vaccine Level: {0}", Absolute Value(Round To Integer(Event Player.infectionLvl,
 			Down))) : (Event Player.reviving ? Custom String("Reviving: {0}s", Round To Integer(Event Player.reviveTimer, Up))
@@ -2249,128 +2100,6 @@ rule("UPDATE BOT OUTLINE COLORS AND VISIBILITY")
 		End;
 		Wait(0.250, Ignore Condition);
 		Loop If Condition Is True;
-	}
-}
-
-rule("PLAYER GETS DOWNED")
-{
-	event
-	{
-		Player Died;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Event Player.playerActiveStatus == True;
-		Is Dummy Bot(Event Player) == False;
-	}
-
-	actions
-	{
-		Event Player.reviveTimer = Event Player.reviveStartTime;
-		Stop All Damage Over Time(Event Player);
-		Event Player.infectionLvl = 0;
-		Event Player.infected = False;
-		Event Player.blinded = False;
-		Filtered Array(All Players(Team 1), Current Array Element.botTarget == Event Player).botTarget = Null;
-		Modify Player Variable(Filtered Array(All Players(All Teams), Array Contains(Current Array Element.potentialTargets,
-			Event Player)), potentialTargets, Remove From Array By Value, Event Player);
-		If(Event Was Environment);
-			Teleport(Event Player, Nearest Walkable Position(Nearest Walkable Position(Position Of(Event Player)) + Direction From Angles(
-				Horizontal Angle From Direction(Direction Towards(Position Of(Event Player), Nearest Walkable Position(Position Of(
-				Event Player)))), 0) * 2));
-		End;
-	}
-}
-
-rule("REVIVE PLAYER OR ADVANCE DEATH TIMER")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Is Dead(Event Player) == True;
-		Global.gameStatus == True;
-		Event Player.playerActiveStatus == True;
-		Event Player.deathTimer > 0;
-		Is Dummy Bot(Event Player) == False;
-	}
-
-	actions
-	{
-		"0) Downed/Dead status, 1) Death timer, 2) Revive timer, 3) Revive start time, 4) Downed position"
-		Global.globalPlayerStats[Event Player.userIndex] = Array(1, Event Player.deathTimer, Event Player.reviveTimer,
-			Event Player.reviveStartTime, Position Of(Event Player));
-		Wait Until(!Event Player.reviving && Is True For Any(Filtered Array(Remove From Array(Global.playerTargetList, Event Player),
-			!Current Array Element.invisible), Distance Between(Position Of(Current Array Element), Position Of(Event Player))
-			< Global.reviveRadius), 0.500);
-		If(Is True For Any(Filtered Array(Remove From Array(Global.playerTargetList, Event Player), !Current Array Element.invisible),
-			Distance Between(Position Of(Event Player), Position Of(Current Array Element)) < Global.reviveRadius));
-			Event Player.reviving = True;
-			Play Effect(All Players(All Teams), Ring Explosion, Color(Yellow), Position Of(Event Player), Global.reviveRadius * 2);
-			Event Player.reviveTimer += -0.500;
-			If(Event Player.deathTimer < Global.mustReviveTime);
-				Event Player.deathTimer += 0.500;
-			End;
-		Else;
-			Event Player.reviving = False;
-			"If dome will pass player before their death timer runs out, set the death timer to how long it will take for the dome to reach them"
-			If(Count Of(Global.objectivePositions) == 1 && Global.extractionZoneRad - Distance Between(Position Of(Event Player), First Of(
-				Global.objectivePositions)) < Event Player.deathTimer);
-				Event Player.deathTimer = (Global.extractionZoneRad - Distance Between(Position Of(Event Player), First Of(
-					Global.objectivePositions))) / 2.500;
-			Else;
-				Event Player.deathTimer += -0.500;
-			End;
-			"Text lines requesting revive"
-			If(Event Player.deathTimer == 40 || Event Player.deathTimer == 20);
-				Start Rule(needReviveTextLines, Restart Rule);
-			End;
-			"Player is dead outside of extraction zone"
-			If(Count Of(Global.objectivePositions) == 1 && Distance Between(First Of(Global.objectivePositions), Position Of(Event Player))
-				> Global.extractionZoneRad);
-				Event Player.deathTimer = 0;
-			End;
-			"Player's body falls off of map"
-			If(Y Component Of(Position Of(Event Player)) - Y Component Of(Nearest Walkable Position(Position Of(Event Player))) < -0.100);
-				Teleport(Event Player, Nearest Walkable Position(Nearest Walkable Position(Position Of(Event Player)) + Direction From Angles(
-					Horizontal Angle From Direction(Direction Towards(Position Of(Event Player), Nearest Walkable Position(Position Of(
-					Event Player)))), 0) * 2));
-			End;
-		End;
-		If(Event Player.reviveTimer <= 0);
-			Event Player.reviveStartTime += 1;
-			Event Player.reviveTimer = Event Player.reviveStartTime;
-			Set Ammo(Event Player, 0, Max Ammo(Event Player, 0));
-			Resurrect(Event Player);
-			Event Player.reviving = False;
-			Set Status(Event Player, Null, Phased Out, 5);
-			Wait Until(Is Alive(Event Player), 2);
-		Else If(Event Player.deathTimer <= 0);
-			"0) Downed/Dead status, 1) Death timer, 2) Revive timer, 3) Revive start time, 4) Downed position"
-			Global.globalPlayerStats[Event Player.userIndex] = Array(2, Event Player.deathTimer, Event Player.reviveTimer,
-				Event Player.reviveStartTime, Vector(0, -100, 0));
-			Big Message(Remove From Array(All Players(All Teams), Event Player), Custom String("{0} {1} died!", Event Player, Hero Icon String(
-				Hero Of(Event Player))));
-			Small Message(Event Player, Custom String("You have died. You are eliminated from this round."));
-			Teleport(Event Player, Vector(0, -100, 0));
-			Set Invisible(Event Player, All);
-		End;
-		Loop If Condition Is True;
-		Event Player.reviving = False;
-		If(Is Alive(Event Player));
-			Event Player.deathTimer = Global.mustReviveTime;
-			"0) Downed/Dead status, 1) Death timer, 2) Revive timer, 3) Revive start time, 4) Downed position"
-			Global.globalPlayerStats[Event Player.userIndex] = Array(0, Event Player.deathTimer, Event Player.reviveTimer,
-				Event Player.reviveStartTime, Position Of(Event Player));
-		End;
 	}
 }
 
@@ -2877,7 +2606,7 @@ rule("BOT DIES")
 			"Allow for custom revive times"
 			Wait Until(Event Player.reviveTimer != 0, 0.125);
 			If(Event Player.reviveTimer == 0);
-				Event Player.reviveTimer = (Match Time + Global.matchEndTime) / 60;
+				Event Player.reviveTimer = (Match Time + Global.matchEndTime) / 240;
 			End;
 			If(Count Of(Global.spawnTimes) < Global.numberOfBots);
 				Modify Global Variable(spawnTimes, Append To Array, Event Player.reviveTimer);
@@ -3315,7 +3044,7 @@ rule("BOTS INFLICT DAMAGE OVER TIME (INFECTION LEVEL MANAGEMENT)")
 		If(Event Player.damageOverTimeDuration < Event Player.biteDuration);
 			Event Player.damageOverTimeDuration = Event Player.biteDuration;
 		End;
-		If(Workshop Setting Toggle(Custom String("Infection"), Custom String("Melee Infection Enabled"), True, 0) && !Has Status(
+		If(Workshop Setting Toggle(Custom String("Infection"), Custom String("Melee Infection Enabled"), False, 0) && !Has Status(
 			Event Player, Hacked) && !Is Dummy Bot(Victim) && Health(Victim) <= Victim.initialMaxHealth);
 			If(Victim.infected);
 				Victim.infectionLvl += 1 / Workshop Setting Integer(Custom String("Infection"), Custom String("Hits to increase infection level"),
@@ -3472,68 +3201,8 @@ rule("botTeleportCenter")
 	actions
 	{
 		"Capture Point/Extration Point"
-		If(Global.objectiveTypes[0] == 1);
-			If(Count Of(Global.playersOnObjective) == 0);
-				Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-					Current Array Element), First Of(Global.objectivePositions)))));
-			Else If(Count Of(Global.playersOnObjective) > 0 && Count Of(Filtered Array(Global.playerTargetList, Distance Between(First Of(
-					Global.objectivePositions), Position Of(Current Array Element)) < First Of(Global.botMaxTeleportRange))) < Round To Integer(
-					Count Of(Global.playerTargetList) * 0.750, Up));
-				Event Player.averagePlayersPos = First Of(Global.objectivePositions);
-			Else;
-				Call Subroutine(locateAveragePlayerLocation);
-			End;
-		"Boss"
-		Else If(Global.objectiveTypes[0] == 3);
-			Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-				Current Array Element), Position Of(First Of(Global.bosses))))));
-		"Resource Collection"
-		Else If(Global.objectiveTypes[0] == 4);
-			Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-				Current Array Element), First Of(Global.objectivePositions)))));
-		"Survivor Rescue"
-		Else If(Global.objectiveTypes[0] == 5);
-			If(Global.survivorToRescue.botFollowTarget == Null);
-				Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-					Current Array Element), Position Of(Global.survivorToRescue)))));
-			Else;
-				Event Player.averagePlayersPos = (Position Of(Global.survivorToRescue) + Position Of(Global.survivorToRescue.botFollowTarget)) / 2;
-			End;
-		"Killzone"
-		Else If(Global.objectiveTypes[0] == 6);
-			"If 75% of living players are in the killzone"
-			If(Count Of(Filtered Array(Global.playerTargetList, Distance Between(Position Of(Current Array Element), Global.objectiveChase1)
-				< Global.objectiveRad)) > 0.750 * Count Of(Global.playerTargetList));
-				"Average player positon"
-				Call Subroutine(locateAveragePlayerLocation);
-			Else;
-				"Player closeset to the center of the killzone"
-				Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-					Current Array Element), Global.objectiveChase1))));
-			End;
-		"Zombie egg"
-		Else If(Global.objectiveTypes[0] == 7);
-			Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-				Current Array Element), First Of(Global.objectivePositions)))));
-		"Satellite Uplink"
-		Else If(Global.objectiveTypes[0] == 8);
-			"Checks if any players are currently repairing terminals"
-			If(Count Of(Global.playersOnObjective) > 0);
-				"Terminal with highest repair percentage that is not fully repaired"
-				Event Player.averagePlayersPos = Last Of(Sorted Array(Filtered Array(Global.objectiveResourcePositions, Count Of(
-					Players Within Radius(Current Array Element, Global.objectiveRad, Team 2, Off))
-					&& Global.objectiveCaptureValue[Index Of Array Value(Global.objectiveResourcePositions, Current Array Element)] < 100),
-					Global.objectiveCaptureValue[Index Of Array Value(Global.objectiveResourcePositions, Current Array Element)]));
-			Else;
-				"Closest player to sattelite firing position"
-				Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-					Current Array Element), First Of(Global.objectivePositions)))));
-			End;
-		"Graveyard"
-		Else If(Global.objectiveTypes[0] == 9);
-			Event Player.averagePlayersPos = Position Of(First Of(Sorted Array(Global.playerTargetList, Distance Between(Position Of(
-				Current Array Element), First Of(Global.objectivePositions)))));
-		"Default"
+		If(True);
+			Event Player.averagePlayersPos = Payload Position + Direction Towards(Payload Position, Objective Position(Objective Index)) * Min(20, Distance Between(Payload Position, Objective Position(Objective Index)));
 		Else;
 			Call Subroutine(locateAveragePlayerLocation);
 		End;
