@@ -2,7 +2,7 @@ settings
 {
 	main
 	{
-		Description: "Fight against an endless horde of zombies while completing various objectives.\r\n		Use power ups found in supply drops while you fight off the horde. 	\r\n		Get to the extraction point and watch the map get nuked.\r\n		Don't leave anyone behind!\r\n		\r\n		(Original Creator: Mazattack#1183) [Game Code: MEBGG] \r\n		Discord: https://discord.gg/3BhYtNfwMj		\r\nhttps://workshop.codes/MEBGG\r\n		Github: github.com/Mazattack1999/zsw-ow"
+		Description: "Get to the objective and fight off the hoard.\r\n		Push with your team to the end of the map. 	\r\n		Watch eachother's backs and finish the fight!\r\n				\r\n		(Original Creator: Mazattack#1183) [Game Code: MEBGG] \r\n		Discord: https://discord.gg/3BhYtNfwMj		\r\nhttps://workshop.codes/MEBGG\r\n		Github: github.com/Mazattack1999/zsw-ow"
 		Mode Name: "Zombie Survival Watch"
 	}
 
