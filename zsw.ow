@@ -1938,6 +1938,34 @@ rule("UPDATE BOT OUTLINE COLORS AND VISIBILITY")
 	}
 }
 
+rule("PLAYER IN SPAWN ROOM")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is In Spawn Room(Event Player) == True;
+	}
+
+	actions
+	{
+		Stop All Damage Over Time(Event Player);
+		Clear Status(Event Player, Burning);
+		If(Event Player.infectionLvl > 0);
+			If(Event Player.infected);
+				Small Message(Event Player, Custom String("You are cured!"));
+				Event Player.infected = False;
+			End;
+			Event Player.infectionLvl = 0;
+		End;
+	}
+}
+
 rule("PLAYER PICKS UP HEALTH PACK")
 {
 	event
