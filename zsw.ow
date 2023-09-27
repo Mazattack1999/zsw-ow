@@ -2759,55 +2759,6 @@ rule("BOTS JUMP")
 	}
 }
 
-rule("BOTS MOVE THROUGH SPAWN DOORS")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 1;
-		All;
-	}
-
-	conditions
-	{
-		Event Player.botTarget != Null;
-		Event Player.wallCollisionEnabled == True;
-		Event Player.canWallPhase == True;
-		Event Player.attached != True;
-		Event Player.crowdControlled != True;
-		Is Alive(Event Player) == True;
-		Has Status(Event Player, Rooted) == False;
-		Throttle Of(Event Player) != Vector(0, 0, 0);
-		(Is On Ground(Event Player) || (Array Contains(Global.bosses, Event Player) && Altitude Of(Event Player) < 10)) == True;
-		"Allows if bot bumps into something"
-		Speed Of In Direction(Event Player, World Vector Of(Throttle Of(Event Player), Event Player, Rotation))
-			< Event Player.botThrottleSpeed * Event Player.movementSpeed * 3;
-		"Makes sure bot is moving forward"
-		Speed Of In Direction(Event Player, World Vector Of(Throttle Of(Event Player), Event Player, Rotation)) >= 0;
-		Is In Line of Sight(Position Of(Event Player) + Vector(0, 0.750, 0) * Event Player.size, Position Of(Event Player) + Vector(0,
-			0.750, 0) * Event Player.size + Normalize(World Vector Of(Throttle Of(Event Player), Event Player, Rotation))
-			* 3 * Event Player.size, Barriers Do Not Block LOS) == True;
-	}
-
-	actions
-	{
-		Wait(0.125, Abort When False);
-		Disable Movement Collision With Environment(Event Player, False);
-		Event Player.wallCollisionEnabled = False;
-		If(Array Contains(Global.bosses, Event Player));
-			Wait(2, Restart When True);
-		Else;
-			Wait(1, Ignore Condition);
-		End;
-		Loop If Condition Is True;
-		Enable Movement Collision With Environment(Event Player);
-		Event Player.wallCollisionEnabled = True;
-		If(!Array Contains(Global.bosses, Event Player));
-			Wait(5, Ignore Condition);
-		End;
-	}
-}
-
 rule("BOTS MELEE")
 {
 	event
@@ -6481,13 +6432,13 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 	{
 		Has Spawned(Event Player) == True;
 		Global.gameStatus == True;
+		(Event Player.enhancementValues[0] != Event Player.currentEnhancement || Event Player.currentEnhancement == 0) == True;
 		!Is In Spawn Room(Event Player) == True;
 		Is Dummy Bot(Event Player) != True;
 	}
 
 	actions
 	{
-		Call Subroutine(destroyPlayerEnhancementEntities);
 		If(Event Player.enhancementValues[0] == 0);
 			"Default Enhancement: Workshop Setting"
 			Event Player.enhancementValues[0] = Workshop Setting Combo(Custom String("Enhancements"), Custom String("Default Enhancement"), 9,
@@ -6496,6 +6447,7 @@ rule("PLAYER ENHANCEMENT INITIALIZATION")
 				"Born to Battle"), Custom String("Kevlar"), Custom String("Nano Nurse"), Custom String("Hitchhiker"), Custom String("P.U.P.")),
 				0);
 		End;
+		Call Subroutine(destroyPlayerEnhancementEntities);
 		"Infection Resistance"
 		If(Event Player.enhancementValues[0] == 1);
 			"Enhancement: Infection Resistance"
