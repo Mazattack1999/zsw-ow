@@ -2075,7 +2075,7 @@ rule("PLAYER AFK")
 		Has Spawned(Event Player) == True;
 		Is Firing Primary(Event Player) == False;
 		Is Firing Secondary(Event Player) == False;
-		Array Contains(Global.playersOnObjective, Event Player) != True;
+		Is On Objective(Event Player) != True;
 	}
 
 	actions
