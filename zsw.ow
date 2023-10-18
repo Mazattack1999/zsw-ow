@@ -1367,6 +1367,7 @@ rule("PLAYER SELECTS/RESELECTS HERO")
 		Start Rule(setPrematchTimer, Restart Rule);
 		Event Player.playerMenuStatus[0] = 2;
 		Wait(0.016, Ignore Condition);
+		Event Player.invisible = 0;
 		If(!Event Player.playerActiveStatus);
 			Small Message(Event Player, Custom String(
 				"Use the voting options in the top left corner of your screen to adjust the game settings"));
