@@ -1822,7 +1822,6 @@ rule("PLAYER INITIALIZATION")
 		Wait(0.250, Abort When False);
 		Enable Game Mode In-World UI(Event Player);
 		Enable Game Mode HUD(Event Player);
-		Event Player.invisible = False;
 		Event Player.reviving = False;
 		Event Player.infected = False;
 		Enable Death Spectate Target HUD(Event Player);
@@ -2246,14 +2245,8 @@ rule("SOMBRA INITIALIZE")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Sombra;
-	}
-
-	conditions
-	{
-		Is Game In Progress == True;
-		Is Alive(Event Player) == True;
 	}
 
 	actions
@@ -2268,7 +2261,7 @@ rule("SOMBRA IN COMBAT (TOOK DAMAGE)")
 	event
 	{
 		Player Took Damage;
-		Team 1;
+		Team 2;
 		Sombra;
 	}
 
@@ -2289,7 +2282,7 @@ rule("SOMBRA IN COMBAT (BUTTON PRESSES)")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Sombra;
 	}
 
@@ -2314,7 +2307,7 @@ rule("SOMBRA USES TRANSLOCATOR")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Sombra;
 	}
 
@@ -2340,7 +2333,7 @@ rule("SOMBRA INVISIBLE")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Sombra;
 	}
 
@@ -2365,7 +2358,7 @@ rule("DOOMFIST INVIS WHILE ULTING")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Doomfist;
 	}
 
@@ -2388,7 +2381,7 @@ rule("MOIRA INVIS WHILE FADING")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Moira;
 	}
 
@@ -2411,7 +2404,7 @@ rule("TRACER INVIS WHILE RECALLING")
 	event
 	{
 		Ongoing - Each Player;
-		Team 1;
+		Team 2;
 		Tracer;
 	}
 
