@@ -2252,12 +2252,13 @@ rule("SOMBRA INITIALIZE")
 	conditions
 	{
 		Is Game In Progress == True;
+		Is Alive(Event Player) == True;
 	}
 
 	actions
 	{
-		Event Player.damageOverTimeDuration = 3;
-		Chase Player Variable At Rate(Event Player, damageOverTimeDuration, 0, Event Player.infected ? 0 : 1, Destination And Rate);
+		Event Player.damageOverTimeDuration = 3.5;
+		Chase Player Variable At Rate(Event Player, damageOverTimeDuration, 0, Event Player.infected || Is Dead(Event Player) ? 0 : 1, Destination And Rate);
 	}
 }
 
@@ -2273,12 +2274,12 @@ rule("SOMBRA IN COMBAT (TOOK DAMAGE)")
 	conditions
 	{
 		Event Player.infected != True;
-		Event Player.damageOverTimeDuration < Attacker.damageOverTimeDuration + 4;
+		Event Player.damageOverTimeDuration < Attacker.damageOverTimeDuration + 3.5;
 	}
 
 	actions
 	{
-		Event Player.damageOverTimeDuration = Attacker.damageOverTimeDuration + 4;
+		Event Player.damageOverTimeDuration = Attacker.damageOverTimeDuration + 3.5;
 	}
 }
 
@@ -2294,13 +2295,14 @@ rule("SOMBRA IN COMBAT (BUTTON PRESSES)")
 	conditions
 	{
 		Is Game In Progress == True;
-		Event Player.damageOverTimeDuration < 4;
+		Event Player.damageOverTimeDuration < 3.5;
+		Is Alive(Event Player) == True;
 		(Is True For Any(Array(Button(Primary Fire), Button(Secondary Fire), Button(Ability 1), Button(Melee)), Is Button Held(Event Player, Current Array Element) && Ability Cooldown(Event Player, Current Array Element) == 0)) == True;
 	}
 
 	actions
 	{
-		Event Player.damageOverTimeDuration = 4;
+		Event Player.damageOverTimeDuration = 3.5;
 		Wait(0.25, Restart When True);
 		Loop If Condition Is True;
 	}
@@ -2324,8 +2326,8 @@ rule("SOMBRA USES TRANSLOCATOR")
 
 	actions
 	{
-		If(Event Player.damageOverTimeDuration > 3);
-			Event Player.damageOverTimeDuration = 1;
+		If(Event Player.damageOverTimeDuration >= 2.5);
+			Event Player.damageOverTimeDuration -= 2.5;
 		Else;
 			Event Player.damageOverTimeDuration = 0;
 		End;
