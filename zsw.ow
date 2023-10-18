@@ -2104,48 +2104,6 @@ rule("PLAYER AFK")
 	}
 }
 
-rule("PLAYER VISIBILITY MANAGMENT")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 2;
-		All;
-	}
-
-	conditions
-	{
-		Is Game In Progress == True;
-		Event Player.invisible == False;
-		(Is Using Ability 1(Event Player) || Is Using Ability 2(Event Player) || Is Using Ultimate(Event Player)) == True;
-		Array Contains(Global.invisibilityHeros, Hero Of(Event Player)) == True;
-	}
-
-	actions
-	{
-		"Cases where players will be invisible to bots while using normal game abilities"
-		If((Hero Of(Event Player) == Hero(Sombra) || Hero Of(Event Player) == Hero(Moira)) && Is Using Ability 1(Event Player));
-			While(Is Using Ability 1(Event Player));
-				Event Player.invisible = True;
-				Wait Until(!Is Using Ability 1(Event Player) || !Event Player.invisible, 9999);
-			End;
-		Else If(Hero Of(Event Player) == Hero(Doomfist) && Is Using Ultimate(Event Player));
-			While(Is Using Ultimate(Event Player));
-				Event Player.invisible = True;
-				Wait Until(!Is Using Ultimate(Event Player) || !Event Player.invisible, 9999);
-			End;
-		Else If(Hero Of(Event Player) == Hero(Tracer) && Is Using Ability 2(Event Player));
-			While(Is Using Ability 2(Event Player));
-				Event Player.invisible = True;
-				Wait Until(!Is Using Ability 2(Event Player) || !Event Player.invisible, 9999);
-			End;
-		End;
-		Event Player.invisible = False;
-		Wait(0.250, Ignore Condition);
-		Loop If Condition Is True;
-	}
-}
-
 rule("PLAYER AUTOMATIC RELOAD")
 {
 	event
@@ -2275,6 +2233,114 @@ rule("updateUsers")
 			Global.globalPlayerStats[Event Player.userIndex] = Array(0, Event Player.deathTimer, Event Player.reviveTimer,
 				Event Player.reviveStartTime, Position Of(Event Player));
 		End;
+	}
+}
+
+disabled rule("============================================== HERO TUNING ====================================================")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("SOMBRA INVISIBILITY")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Sombra;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Event Player.invisible == False;
+		Is Using Ability 1(Event Player) == True;
+	}
+
+	actions
+	{
+		Event Player.invisible = True;
+		Wait Until(!Is Using Ability 1(Event Player) || !Event Player.invisible, 9999);
+		Loop If Condition Is True;
+		Event Player.invisible = False;
+	}
+}
+
+rule("DOOMFIST INVIS WHILE ULTING")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Event Player.invisible == False;
+		Is Using Ultimate(Event Player) == True;
+	}
+
+	actions
+	{
+		Event Player.invisible = True;
+		Wait Until(!Is Using Ultimate(Event Player) || !Event Player.invisible, 9999);
+		Loop If Condition Is True;
+		Event Player.invisible = False;
+	}
+}
+
+rule("MOIRA INVIS WHILE FADING")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Moira;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Event Player.invisible == False;
+		Is Using Ability 1(Event Player) == True;
+	}
+
+	actions
+	{
+		Event Player.invisible = True;
+		Wait Until(!Is Using Ability 1(Event Player) || !Event Player.invisible, 9999);
+		Loop If Condition Is True;
+		Event Player.invisible = False;
+	}
+}
+
+rule("TRACER INVIS WHILE RECALLING")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		Tracer;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Event Player.invisible == False;
+		Is Using Ability 2(Event Player) == True;
+	}
+
+	actions
+	{
+		Event Player.invisible = True;
+		Wait Until(!Is Using Ability 2(Event Player) || !Event Player.invisible, 9999);
+		Loop If Condition Is True;
+		Event Player.invisible = False;
 	}
 }
 
