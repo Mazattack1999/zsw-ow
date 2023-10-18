@@ -26,7 +26,6 @@ settings
 			Capture Speed Modifier: 40%
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		disabled Capture the Flag
@@ -40,7 +39,6 @@ settings
 			Flag Score Respawn Time: 20.0
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		disabled Control
@@ -50,7 +48,6 @@ settings
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Scoring Speed Modifier: 40%
-			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		Escort
@@ -59,7 +56,6 @@ settings
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Payload Speed Modifier: 40%
-			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		disabled Flashpoint
@@ -68,7 +64,6 @@ settings
 			First Active Control Point: A
 			Score To Win: 3
 			Scoring Speed Modifier: 40%
-			Tank Role Passive Health Bonus: Always Enabled
 		}
 
 		Hybrid
@@ -78,7 +73,6 @@ settings
 			Game Mode Start: Manual
 			Kill Cam: Off
 			Payload Speed Modifier: 40%
-			Tank Role Passive Health Bonus: Always Enabled
 
 			disabled maps
 			{
@@ -91,7 +85,6 @@ settings
 			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
-			Tank Role Passive Health Bonus: Always Enabled
 			TS-1 Push Speed Modifier: 40%
 			TS-1 Walk Speed Modifier: 40%
 		}
@@ -101,6 +94,10 @@ settings
 			Allow Hero Switching: On
 			Game Mode Start: Manual
 			Kill Cam: Off
+		}
+
+		General
+		{
 			Tank Role Passive Health Bonus: Always Enabled
 		}
 	}
@@ -2244,31 +2241,6 @@ disabled rule("============================================== HERO TUNING ======
 	}
 }
 
-rule("SOMBRA INVISIBILITY")
-{
-	event
-	{
-		Ongoing - Each Player;
-		Team 1;
-		Sombra;
-	}
-
-	conditions
-	{
-		Is Game In Progress == True;
-		Event Player.invisible == False;
-		Is Using Ability 1(Event Player) == True;
-	}
-
-	actions
-	{
-		Event Player.invisible = True;
-		Wait Until(!Is Using Ability 1(Event Player) || !Event Player.invisible, 9999);
-		Loop If Condition Is True;
-		Event Player.invisible = False;
-	}
-}
-
 rule("DOOMFIST INVIS WHILE ULTING")
 {
 	event
@@ -3267,24 +3239,21 @@ rule("botEntityManagement")
 				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			Else If(Hero Of(Event Player) == Hero(Sombra));
 				"Near fog visual"
-				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Gray),
-					Eye Position(Local Player) + Facing Direction Of(Local Player) * (6.750 + Evaluate Once(Random Real(-0.500, 0.500))), 200,
+				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Gray), Eye Position(Local Player)
+					+ Facing Direction Of(Local Player) * (6.750 + Evaluate Once(Random Real(-0.500, 0.500))), 200,
 					Visible To Position and Radius);
 				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 				"Mid Range fog visual"
-				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Purple),
-					Eye Position(Local Player) + Facing Direction Of(Local Player) * (20 + Evaluate Once(Random Real(-0.500, 0.500))), 200,
-					Visible To Position and Radius);
+				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Purple), Eye Position(Local Player)
+					+ Facing Direction Of(Local Player) * (20 + Evaluate Once(Random Real(-0.500, 0.500))), 200, Visible To Position and Radius);
 				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 				"Mid Range fog visual"
-				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Purple),
-					Eye Position(Local Player) + Facing Direction Of(Local Player) * (30 + Evaluate Once(Random Real(-0.500, 0.500))), 200,
-					Visible To Position and Radius);
+				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True), Bad Aura, Color(Purple), Eye Position(Local Player)
+					+ Facing Direction Of(Local Player) * (30 + Evaluate Once(Random Real(-0.500, 0.500))), 200, Visible To Position and Radius);
 				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 				"Illusion aura"
-				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True && Is Using Ability 1(
-					Event Player)), Good Aura, Color(Purple), Eye Position(Event Player), 0.250 * Event Player.size,
-					Visible To Position and Radius);
+				Create Effect(Filtered Array(Event Player.botSpecialPotentialTargets, True && Is Using Ability 1(Event Player)), Good Aura, Color(
+					Purple), Eye Position(Event Player), 0.250 * Event Player.size, Visible To Position and Radius);
 				Modify Player Variable(Event Player, generalPlayerBotEntities, Append To Array, Last Created Entity);
 			End;
 		End;
