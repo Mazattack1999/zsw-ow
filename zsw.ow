@@ -2347,13 +2347,15 @@ rule("SOMBRA INVISIBLE")
 	conditions
 	{
 		Is Game In Progress == True;
+		Is Alive(Event Player) == True;
+		Is In Spawn Room(Event Player) != True;
 		Event Player.damageOverTimeDuration == 0;
 	}
 
 	actions
 	{
 		Event Player.invisible += 1;
-		Wait Until(Event Player.damageOverTimeDuration > 0, 9999);
+		Wait Until(Event Player.damageOverTimeDuration > 0 || !Is Alive(Event Player) || Is In Spawn Room(Event Player), 9999);
 		Event Player.invisible -= 1;
 	}
 }
